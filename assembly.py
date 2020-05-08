@@ -73,3 +73,19 @@ def getLocalMatrices(degree = 1):
             )
 
     return K, M
+
+def assembleSystem(grid, K, M):
+    """
+    Assemble system matrix and right hand side with the help of the local matrices
+    and the information stored in the grid.
+    """
+    numDofs = grid.getActiveNodes()
+    # assemble into sparse matrix? --> scipy
+
+    for triangle in grid.traingles:
+        for firtsNode in triangle.nodes:
+            for secondNode in triangle.nodes:
+                # TODO
+                pass
+
+    pass

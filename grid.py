@@ -12,6 +12,9 @@ class Node():
     def dist(self, other):
         return np.sqrt((self.x-other.x)**2 + (self.y-other.y)**2)
 
+    def midpoint(self,other):
+        return Node(0.5*(self.x+other.x),0.5*(self.y+other.y))
+
 class Edge():
     def __init__(self, start, end, boundaryConstraint = None):
         self.start = start
@@ -23,7 +26,10 @@ class Edge():
         return [self.start, self.end]
 
     def __str__(self):
-        return str(self.start) + " -> " + str(self.end)
+        boundaryInfo = " "
+        if self.boundaryConstraint != None:
+            boundaryInfo += "BC: " + str(self.boundaryConstraint)
+        return str(self.start) + " -> " + str(self.end) + boundaryInfo
 
 class Material():
     def __init__(self, values = {}):
@@ -60,7 +66,7 @@ class Triangle():
 
 class BoundaryCondition():
     def __init__(self, type = "Dirichlet", function = lambda x,y: 0.0):
-        self.values   = values
+        self.type     = type
         self.function = function
 
     def __str__(self):
@@ -72,17 +78,31 @@ class Grid():
         self.edges     = edges
         self.triangles = triangles
 
+    def getActiveNodes(self):
+        return len(self.nodes)
+
     def plot(self):
-        # plot nodes
-        xCoords, yCoords = [], []
-        for node in self.nodes:
-            xCoords.append(node.x)
-            yCoords.append(node.y)
-        plt.scatter(xCoords, yCoords)
         # plot edges
-        for edge in self.edges:
+        for i,edge in enumerate(self.edges):
             n1, n2 = edge.start, edge.end
             plt.plot([n1.x,n2.x], [n1.y,n2.y], color = "blue")
+            middle = n1.midpoint(n2)
+            plt.text(middle.x, middle.y, str(i+1), color = "blue")
+
+        # plot nodes
+        xCoords, yCoords = [], []
+        for i,node in enumerate(self.nodes):
+            xCoords.append(node.x)
+            yCoords.append(node.y)
+            plt.text(node.x,node.y, str(i+1))
+        plt.scatter(xCoords, yCoords, color = "black")
+
+        # label the triangles
+        for i, triangle in enumerate(self.triangles):
+            n1, n2, n3 = triangle.nodes
+            middle = n1.midpoint(n2.midpoint(n3))
+            plt.text(middle.x, middle.y, str(i+1), color = "red")
+
         plt.xlabel('x')
         plt.ylabel('y')
         plt.show()
@@ -130,7 +150,16 @@ def homeworkGrid():
     edges.append(Edge(nodes[1], nodes[5]))
 
     # add BoundaryCondition to edges
+    dirichletBoundaryConditions = BoundaryCondition("Dirichlet")
+    neumannBoundaryConditions = BoundaryCondition("Neumann")
 
+    edges[6].boundaryConstraint = dirichletBoundaryConditions
+    edges[8].boundaryConstraint = dirichletBoundaryConditions
+
+    for i in [0,1,2,5,7,9]:
+        edges[i].boundaryConstraint = neumannBoundaryConditions
+
+    # define triangles
     triangles = []
     for i, firstEdge in enumerate(edges):
         for j, secondEdge in enumerate(edges):

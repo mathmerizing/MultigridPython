@@ -19,6 +19,7 @@ if __name__ == "__main__":
 
     # 3. assemble, apply BC
 
+
     # 4. global grid refinement + assembly finer grid matrices
 
     # 5. Multigrid ...
