@@ -27,6 +27,15 @@ class Edge():
 
         self.boundaryConstraint = boundaryConstraint
 
+    def length(self):
+        return self.end.dist(self.start)
+
+    def vector(self):
+        return [
+            self.end.x-self.start.x,
+            self.end.y-self.start.y
+        ]
+
     def nodes(self):
         return [self.start, self.end]
 
@@ -47,6 +56,9 @@ class Edge():
 class Material():
     def __init__(self, values = {}):
         self.values = values
+
+    def get(self, variable):
+        return self.values[variable]
 
     def __str__(self):
         out = []
@@ -73,7 +85,13 @@ class Triangle():
         if self.determinant == None:
             # compute the jacobi determinant of the transformation from the
             # reference triangle
-            pass
+            hypothenuseLength = max([e.length() for e in self.edges])
+            shortSides = []
+            for edge in self.edges:
+                if edge.length() < hypothenuseLength:
+                    # edge is not the hypothenuse
+                    shortSides.append(edge.vector())
+            self.determinant = abs(shortSides[0][0] * shortSides[1][1] - shortSides[0][1] * shortSides[1][0])
         return self.determinant
 
     def __str__(self):

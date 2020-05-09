@@ -85,7 +85,13 @@ def assembleSystem(grid, K, M):
     systemRightHand = np.zeros((numDofs,1),dtype=np.float32)
 
     for triangle in grid.triangles:
-        for firtsNode in triangle.nodes:
+        # get all important triangle/ material parameters
+        detJ = triangle.jacobiDeterminant()
+        a    = triangle.material.get("a")
+        c    = triangle.material.get("c")
+        f    = triangle.material.get("f")
+        
+        for firstNode in triangle.nodes:
             for secondNode in triangle.nodes:
                 # TODO
                 pass
