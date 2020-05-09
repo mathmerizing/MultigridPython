@@ -1,5 +1,6 @@
 import numpy as np
 from sympy import symbols, diff, integrate
+from scipy.sparse import dok_matrix
 
 def getLocalMatrices(degree = 1):
     """
@@ -80,12 +81,13 @@ def assembleSystem(grid, K, M):
     and the information stored in the grid.
     """
     numDofs = grid.getActiveNodes()
-    # assemble into sparse matrix? --> scipy
+    systemMatrix    = dok_matrix((numDofs,numDofs),dtype=np.float32)
+    systemRightHand = np.zeros((numDofs,1),dtype=np.float32)
 
-    for triangle in grid.traingles:
+    for triangle in grid.triangles:
         for firtsNode in triangle.nodes:
             for secondNode in triangle.nodes:
                 # TODO
                 pass
 
-    pass
+    return systemMatrix, systemRightHand
