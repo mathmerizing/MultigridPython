@@ -80,20 +80,35 @@ def assembleSystem(grid, K, M):
     Assemble system matrix and right hand side with the help of the local matrices
     and the information stored in the grid.
     """
-    numDofs = grid.getActiveNodes()
+    numDofs = len(grid.dofs)
     systemMatrix    = dok_matrix((numDofs,numDofs),dtype=np.float32)
-    systemRightHand = np.zeros((numDofs,1),dtype=np.float32)
+    systemRightHand = np.zeros(numDofs,dtype=np.float32)
 
     for triangle in grid.triangles:
         # get all important triangle/ material parameters
-        detJ = triangle.jacobiDeterminant()
-        a    = triangle.material.get("a")
-        c    = triangle.material.get("c")
-        f    = triangle.material.get("f")
-        
-        for firstNode in triangle.nodes:
-            for secondNode in triangle.nodes:
-                # TODO
-                pass
+        detJ, G = triangle.jacobi()
+        # note: G = J^{-1} * J^{-T}
+        a       = triangle.material.get("a")
+        c       = triangle.material.get("c")
+        f       = triangle.material.get("f")
+        numLocalDofs = len(triangle.dofs)
+
+        # assemble cell matrix and cell right hand side
+        cellMatrix    = np.zeros((numLocalDofs, numLocalDofs), dtype=np.float32)
+        cellRightHand = np.zeros(numLocalDofs, dtype=np.float32)
+
+        # compute cellMatrix
+        diffusionMatrix = a * (G[0,0]*K[0] + G[0,1]*K[1] + G[1,0]*K[1].T + G[1,1]*K[2])
+        reactionMatrix  = c * M * detJ
+        cellMatrix = diffusionMatrix + reactionMatrix
+
+        # compute cellRightHand
+        cellRightHand = f * detJ * np.sum(M, axis = 1)
+
+        # write local to global matrix
+        for i, firstDof in enumerate(triangle.dofs):
+            systemRightHand[firstDof.ind] += cellRightHand[i]
+            for j, secondDof in enumerate(triangle.dofs):
+                systemMatrix[firstDof.ind, secondDof.ind] += cellMatrix[i,j]
 
     return systemMatrix, systemRightHand

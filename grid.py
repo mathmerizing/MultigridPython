@@ -30,14 +30,26 @@ class Edge():
     def length(self):
         return self.end.dist(self.start)
 
+    def orientedVector(self, startNode):
+        if startNode == self.start:
+            return self.vector()
+        else:
+            return -1. * self.vector()
+
     def vector(self):
-        return [
+        return np.array([
             self.end.x-self.start.x,
             self.end.y-self.start.y
-        ]
+        ])
 
     def nodes(self):
         return [self.start, self.end]
+
+    def commonNode(self,other):
+        if self.start in other.nodes():
+            return self.start
+        else:
+            return self.end
 
     def getChildren(self):
         if len(self.children) == 0:
@@ -69,7 +81,7 @@ class Material():
 class Triangle():
     def __init__(self, nodes, edges, material = Material()):
         self.nodes = nodes
-        # sort the edges such that self.nodes[i] doesn't lie on the edge
+        # sort the edges such that self.nodes[i] doesn't lie on the edge self.edges[i]
         self.edges = []
         for node in self.nodes:
             for edge in edges:
@@ -77,11 +89,44 @@ class Triangle():
                     self.edges.append(edge)
 
         self.material = material
+        self.dofs = self.nodes[:]
 
-        # parameter for assembly
-        self.determinant = None
+    def distributeDofs(self, degree):
+        if degree == 3:
+            raise NotImplementedError()
+
+        if degree == 2:
+            for edge in self.edges:
+                _, midpoint = edge.getChildren()
+                self.dofs.append(midpoint)
+
+    def jacobi(self):
+        # compute jacobi matrix of the transformation from the
+        # reference triangle
+        hypothenuseLength = max([e.length() for e in self.edges])
+        shortEdges = []
+        jacobiMatrix = np.zeros((2,2),dtype=np.float32)
+        for edge in self.edges:
+            if edge.length() < hypothenuseLength:
+                # edge is not the hypothenuse
+                shortEdges.append(edge)
+        # determine the node at the right angle of the triangle
+        startNode = shortEdges[0].commonNode(shortEdges[1])
+        # fill jacobi matrix
+        jacobiMatrix[:,0] = shortEdges[0].orientedVector(startNode)
+        jacobiMatrix[:,1] = shortEdges[1].orientedVector(startNode)
+
+        # compute determinant of jacobi matrix
+        jacobiDeterminant = np.linalg.det(jacobiMatrix)
+
+        # compute J^{-1} * J^{-T} where J is the jacobi matrix
+        jacobiInverse = np.linalg.inv(jacobiMatrix)
+
+        return abs(jacobiDeterminant), np.dot(jacobiInverse, jacobiInverse.T)
+
 
     def jacobiDeterminant(self):
+        # compute determinant of jacobi matrix
         if self.determinant == None:
             # compute the jacobi determinant of the transformation from the
             # reference triangle
@@ -99,6 +144,11 @@ class Triangle():
         # nodes
         out.append("-----> NODES:")
         for i, node in enumerate(self.nodes):
+            out.append(f"\t {i+1}. {str(node)}")
+
+        # dofs
+        out.append("--> DOFS:")
+        for i, node in enumerate(self.dofs):
             out.append(f"\t {i+1}. {str(node)}")
 
         # egdes
@@ -120,16 +170,16 @@ class BoundaryCondition():
         return self.type
 
 class Grid():
-    def __init__(self, nodes, edges, triangles):
+    def __init__(self, nodes, edges, triangles, degree = 1):
         self.nodes     = nodes
         self.edges     = edges
         self.triangles = triangles
-
-    def getActiveNodes(self):
-        return len(self.nodes)
+        self.degree    = degree
+        self.dofs      = self.nodes[:]
+        self.distributeDofs()
 
     def plot(self, title = 'Finite Element Grid'):
-        showLabels = True if self.getActiveNodes() < 100 else False
+        showLabels = True if len(self.nodes) < 100 else False
 
         # plot edges
         for i,edge in enumerate(self.edges):
@@ -167,6 +217,11 @@ class Grid():
         # nodes
         out.append("--> NODES:")
         for i, node in enumerate(self.nodes):
+            out.append(f"\t {i+1}. {str(node)}")
+
+        # dofs
+        out.append("--> DOFS:")
+        for i, node in enumerate(self.dofs):
             out.append(f"\t {i+1}. {str(node)}")
 
         # egdes
@@ -225,9 +280,22 @@ class Grid():
                 Triangle(list(set(centerNodes)), centerEdges, triangle.material)
             )
 
-        return Grid(refinedNodes,refinedEdges,refinedTriangles)
+        return Grid(refinedNodes,refinedEdges,refinedTriangles, degree = self.degree)
 
-def homeworkGrid():
+    def distributeDofs(self):
+        if self.degree == 3:
+            raise NotImplementedError()
+
+        if self.degree == 2:
+            for edge in self.edges:
+                _, midpoint = edge.getChildren()
+                midpoint.ind = len(self.dofs)
+                self.dofs.append(midpoint)
+
+        for triangle in self.triangles:
+            triangle.distributeDofs(degree = self.degree)
+
+def homeworkGrid(degree = 1):
     # create nodes of L-shape
     nodes = []
     for x in [-1.,0.,1.]:
@@ -273,7 +341,6 @@ def homeworkGrid():
                                 [firstEdge, secondEdge, thirdEdge]
                             )
                         )
-                        print(triangles[-1])
 
     my_material = lambda val : Material({"a": 1., "c": 0., "f":  val})
 
@@ -287,4 +354,4 @@ def homeworkGrid():
     triangles[4].material = my_material(-1.)
     triangles[5].material = my_material(-1.)
 
-    return Grid(nodes, edges, triangles)
+    return Grid(nodes, edges, triangles, degree = degree)

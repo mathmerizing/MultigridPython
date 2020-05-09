@@ -3,15 +3,16 @@ from assembly import getLocalMatrices, assembleSystem
 from grid import homeworkGrid
 
 GLOBAL_REFINEMENTS = 1
-SHOW_GRIDS = False
+SHOW_GRIDS = True
+DEGREE = 1
 
 if __name__ == "__main__":
     # 1. getLocalMatrices
-    K , M = getLocalMatrices(degree = 1)
+    K , M = getLocalMatrices(degree = DEGREE)
     # TODO: Debug degree = 2,3 !!!!
 
     # 2. getCoarseGrid
-    coarseGrid = homeworkGrid()
+    coarseGrid = homeworkGrid(degree = DEGREE)
     if SHOW_GRIDS:
         print(coarseGrid)
         coarseGrid.plot(title = "Coarse Grid")
