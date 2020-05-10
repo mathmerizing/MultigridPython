@@ -26,6 +26,7 @@ class Edge():
         self.middle   = None
 
         self.boundaryConstraint = boundaryConstraint
+        self.dofs = []
 
     def length(self):
         return self.end.dist(self.start)
@@ -58,6 +59,16 @@ class Edge():
             rightEdge = Edge(self.middle, self.end,    self.boundaryConstraint)
             self.children = [leftEdge, rightEdge]
         return self.children, self.middle
+    
+    def distributeDofs(self, degree):
+        self.dofs.append(self.start)
+        self.dofs.append(self.end)
+        if degree == 3:
+            raise NotImplementedError()
+
+        if degree == 2:
+                _, midpoint = self.getChildren()
+                self.dofs.append(midpoint)
 
     def __str__(self):
         boundaryInfo = " "
@@ -294,6 +305,8 @@ class Grid():
 
         for triangle in self.triangles:
             triangle.distributeDofs(degree = self.degree)
+            for edge in triangle.edges:
+                edge.distributeDofs(degree = self.degree)
 
 def homeworkGrid(degree = 1):
     # create nodes of L-shape

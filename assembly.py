@@ -1,6 +1,7 @@
 import numpy as np
 from sympy import symbols, diff, integrate
 from scipy.sparse import dok_matrix
+from grid import BoundaryCondition
 
 def getLocalMatrices(degree = 1):
     """
@@ -112,3 +113,20 @@ def assembleSystem(grid, K, M):
                 systemMatrix[firstDof.ind, secondDof.ind] += cellMatrix[i,j]
 
     return systemMatrix, systemRightHand
+
+def applyBoundaryCondition(grid,systemMatrix,systemRightHand):
+
+    for edge in grid.edges:
+        if(edge.boundaryConstraint is not None):
+            if (edge.boundaryConstraint.type == "Dirichlet"):
+                for firstDof in edge.dofs:
+                    systemRightHand[firstDof.ind] = edge.boundaryConstraint.function(firstDof.x,firstDof.y)
+                    for secondDof in edge.dofs:
+                        if firstDof == secondDof:
+                            systemMatrix[firstDof.ind, secondDof.ind] = 1.0
+                        else:
+                            systemMatrix[firstDof.ind, secondDof.ind] = 0.0
+           
+        
+    return systemMatrix, systemRightHand       
+

@@ -1,5 +1,5 @@
 import numpy as np
-from assembly import getLocalMatrices, assembleSystem
+from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from grid import homeworkGrid
 
 GLOBAL_REFINEMENTS = 1
@@ -21,6 +21,11 @@ if __name__ == "__main__":
     coarseMatrix, coarseRHS = assembleSystem(coarseGrid, K, M)
     print(coarseMatrix.todense())
     print(coarseRHS)
+    coarseMatrix_new, coarseRHS_new = applyBoundaryCondition(coarseGrid,coarseMatrix,coarseRHS)
+    print(coarseMatrix.todense())
+    print(coarseRHS)
+    print((coarseMatrix-coarseMatrix_new).todense())
+    print((coarseRHS_new-coarseRHS))  #don't know why this is array of zeros
     quit()
 
     # 4. global grid refinement + assemble finer grid matrices
