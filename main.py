@@ -1,6 +1,6 @@
 import numpy as np
 from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
-from grid import homeworkGrid
+from grid import homeworkGrid, unitSquare
 
 GLOBAL_REFINEMENTS = 1
 SHOW_GRIDS = True
@@ -12,7 +12,8 @@ if __name__ == "__main__":
     # TODO: Debug degree = 2,3 !!!!
 
     # 2. getCoarseGrid
-    coarseGrid = homeworkGrid(degree = DEGREE)
+    #coarseGrid = homeworkGrid(degree = DEGREE)
+    coarseGrid = unitSquare(degree = DEGREE)
     if SHOW_GRIDS:
         print(coarseGrid)
         coarseGrid.plot(title = "Coarse Grid")
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     print(coarseRHS)
     print((coarseMatrix-coarseMatrix_new).todense())
     print((coarseRHS_new-coarseRHS))  #don't know why this is array of zeros
-    quit()
+    
 
     # 4. global grid refinement + assemble finer grid matrices
     grids = [coarseGrid]
@@ -42,6 +43,8 @@ if __name__ == "__main__":
         grids.append(levelGrid)
 
         # assemble level matrix and apply boundary conditions
-        # TODO
-
+        levelMatrix, levelRHS = assembleSystem(levelGrid, K, M)
+        levelMatrix, levelRHS = applyBoundaryCondition(levelGrid,levelMatrix,levelRHS)
+        print(levelMatrix.todense())
+        print(levelRHS)
     # 5. Multigrid ...

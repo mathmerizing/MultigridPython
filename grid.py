@@ -368,3 +368,45 @@ def homeworkGrid(degree = 1):
     triangles[5].material = my_material(-1.)
 
     return Grid(nodes, edges, triangles, degree = degree)
+
+def unitSquare(degree = 1):
+    nodes = []
+    for y in [0.,1.]:
+        for x in [0.,1.]:
+                nodes.append(Node(x,y, len(nodes)))
+    edges = []
+    for i, firstNode in enumerate(nodes):
+        for j, secondNode in enumerate(nodes):
+            if firstNode.dist(secondNode) < 1.1 and i > j:
+                edges.append(Edge(firstNode, secondNode))
+    #diagonal edge
+    edges.append(Edge(nodes[0], nodes[3]))
+    #boundary condition
+    dirichletBoundaryConditions = BoundaryCondition("Dirichlet")
+
+    # add BoundaryCondition to edge
+    edges[4].boundaryConstraint = dirichletBoundaryConditions 
+
+    #define triangles
+    triangles = []
+    for i, firstEdge in enumerate(edges):
+        for j, secondEdge in enumerate(edges):
+            for k, thirdEdge in enumerate(edges):
+                # we don't want duplicate elements
+                if i > j and j > k:
+                    # is this actually a triangle ?
+                    triangleNodes = set(firstEdge.nodes() + secondEdge.nodes() + thirdEdge.nodes())
+                    if len(triangleNodes) == 3:
+                        triangles.append(
+                            Triangle(
+                                list(triangleNodes),
+                                [firstEdge, secondEdge, thirdEdge]
+                            )
+                        )
+
+    my_material = lambda val : Material({"a": 1., "c": 1., "f":  val})
+
+    triangles[0].material = my_material(1.)
+    triangles[1].material = my_material(0.)
+
+    return Grid(nodes, edges, triangles, degree = degree)
