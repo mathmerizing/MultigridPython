@@ -3,7 +3,7 @@ from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from grid import homeworkGrid, unitSquare
 
 GLOBAL_REFINEMENTS = 1
-SHOW_GRIDS = True
+SHOW_GRIDS = False
 DEGREE = 1
 
 if __name__ == "__main__":
@@ -20,14 +20,11 @@ if __name__ == "__main__":
 
     # 3. assemble, apply BC
     coarseMatrix, coarseRHS = assembleSystem(coarseGrid, K, M)
+    applyBoundaryCondition(coarseGrid,coarseMatrix,coarseRHS)
+    print(coarseGrid)
     print(coarseMatrix.todense())
     print(coarseRHS)
-    coarseMatrix_new, coarseRHS_new = applyBoundaryCondition(coarseGrid,coarseMatrix,coarseRHS)
-    print(coarseMatrix.todense())
-    print(coarseRHS)
-    print((coarseMatrix-coarseMatrix_new).todense())
-    print((coarseRHS_new-coarseRHS))  #don't know why this is array of zeros
-    
+    quit()
 
     # 4. global grid refinement + assemble finer grid matrices
     grids = [coarseGrid]

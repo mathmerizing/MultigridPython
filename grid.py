@@ -59,7 +59,7 @@ class Edge():
             rightEdge = Edge(self.middle, self.end,    self.boundaryConstraint)
             self.children = [leftEdge, rightEdge]
         return self.children, self.middle
-    
+
     def distributeDofs(self, degree):
         self.dofs.append(self.start)
         self.dofs.append(self.end)
@@ -98,6 +98,10 @@ class Triangle():
             for edge in edges:
                 if node not in edge.nodes():
                     self.edges.append(edge)
+        # hypothenuse and corresponding DoF should be first elements
+        hypIndex = np.argmax([e.length() for e in self.edges])
+        self.nodes = self.nodes[hypIndex:] + self.nodes[:hypIndex]
+        self.edges = self.edges[hypIndex:] + self.edges[:hypIndex]
 
         self.material = material
         self.dofs = self.nodes[:]
@@ -173,12 +177,14 @@ class Triangle():
         return "\n".join(out)
 
 class BoundaryCondition():
-    def __init__(self, type = "Dirichlet", function = lambda x,y: 0.0):
-        self.type     = type
-        self.function = function
+    def __init__(self, type = "Dirichlet", homogeneous = True, function = lambda x,y: 0.0):
+        self.type        = type
+        self.function    = function
+        self.homogeneous = homogeneous
 
     def __str__(self):
-        return self.type
+        specifier = "hom. " if self.homogeneous else "inhom. "
+        return specifier + self.type
 
 class Grid():
     def __init__(self, nodes, edges, triangles, degree = 1):
@@ -385,7 +391,7 @@ def unitSquare(degree = 1):
     dirichletBoundaryConditions = BoundaryCondition("Dirichlet")
 
     # add BoundaryCondition to edge
-    edges[4].boundaryConstraint = dirichletBoundaryConditions 
+    edges[3].boundaryConstraint = dirichletBoundaryConditions
 
     #define triangles
     triangles = []

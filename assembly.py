@@ -1,6 +1,6 @@
 import numpy as np
 from sympy import symbols, diff, integrate
-from scipy.sparse import dok_matrix
+from scipy.sparse import csr_matrix
 from grid import BoundaryCondition
 
 def getLocalMatrices(degree = 1):
@@ -82,7 +82,7 @@ def assembleSystem(grid, K, M):
     and the information stored in the grid.
     """
     numDofs = len(grid.dofs)
-    systemMatrix    = dok_matrix((numDofs,numDofs),dtype=np.float32)
+    systemMatrix    = csr_matrix((numDofs,numDofs),dtype=np.float32)
     systemRightHand = np.zeros(numDofs,dtype=np.float32)
 
     for triangle in grid.triangles:
@@ -115,18 +115,13 @@ def assembleSystem(grid, K, M):
     return systemMatrix, systemRightHand
 
 def applyBoundaryCondition(grid,systemMatrix,systemRightHand):
-
     for edge in grid.edges:
         if(edge.boundaryConstraint is not None):
             if (edge.boundaryConstraint.type == "Dirichlet"):
-                for firstDof in edge.dofs:
-                    systemRightHand[firstDof.ind] = edge.boundaryConstraint.function(firstDof.x,firstDof.y)
-                    for secondDof in edge.dofs:
-                        if firstDof == secondDof:
-                            systemMatrix[firstDof.ind, secondDof.ind] = 1.0
-                        else:
-                            systemMatrix[firstDof.ind, secondDof.ind] = 0.0
-           
-        
-    return systemMatrix, systemRightHand       
-
+                for dof in edge.dofs:
+                    systemRightHand[dof.ind] = edge.boundaryConstraint.function(dof.x,dof.y)
+                    # set row dof.ind to 0.0
+                    systemMatrix.data[systemMatrix.indptr[dof.ind]:systemMatrix.indptr[dof.ind+1]] = 0.0
+                    systemMatrix[dof.ind, dof.ind] = 1.0
+            if (edge.boundaryConstraint.type == "Neumann"):
+                pass
