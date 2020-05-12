@@ -215,6 +215,15 @@ class Grid():
                 plt.text(node.x,node.y, str(i+1))
         plt.scatter(xCoords, yCoords, color = "black")
 
+        # plot other dofs
+        xCoords, yCoords = [], []
+        for i,dof in enumerate(self.dofs):
+            if i < len(self.nodes):
+                continue
+            xCoords.append(dof.x)
+            yCoords.append(dof.y)
+        plt.scatter(xCoords, yCoords, color = "green")
+
         # label the triangles
         if showLabels:
             for i, triangle in enumerate(self.triangles):
