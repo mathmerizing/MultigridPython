@@ -50,7 +50,7 @@ def getLocalMatrices(degree = 1):
     K = []
     for (f,g) in [(phi_x,phi_x), (phi_x,phi_y), (phi_y,phi_y)]:
         n, m = len(f), len(g)
-        mat  = np.zeros((n, m))
+        mat  = np.zeros((n, m), dtype=np.float32)
 
         for i in range(n):
             for j in range(m):
@@ -64,7 +64,7 @@ def getLocalMatrices(degree = 1):
 
     # compute local mass matrix
     dim = len(phi)
-    M   = np.zeros((dim, dim))
+    M   = np.zeros((dim, dim), dtype=np.float32)
 
     for i in range(dim):
         for j in range(dim):

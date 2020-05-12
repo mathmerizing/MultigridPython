@@ -39,6 +39,10 @@ def run():
     coarseMatrix, coarseRHS = assembleSystem(coarseGrid, K, M)
     applyBoundaryCondition(coarseGrid,coarseMatrix,coarseRHS)
 
+    B = loadMatlabMatrix("matlab_matrix.txt",4)
+    matricesPermutationEquivalent(coarseMatrix.todense(),B)
+    quit()
+
     print(coarseMatrix.todense())
     print(coarseRHS)
     print(np.dot(np.linalg.inv(coarseMatrix.todense()),coarseRHS))
@@ -63,6 +67,42 @@ def run():
         print(levelMatrix.todense())
         print(levelRHS)
     # 5. Multigrid ...
+
+def matricesPermutationEquivalent(A,B):
+    from itertools import permutations
+
+    bestPermutation = None
+    bestComponentDifference = 10**10
+
+    for p in permutations(range(A.shape[0])):
+        p = np.array(p)
+        if np.max(A[p][:,p]-B) < bestComponentDifference:
+            bestPermutation = p
+            bestComponentDifference = np.max(A[p][:,p]-B)
+
+    print("\nFirst matrix:")
+    print(A)
+
+    print("\nSecond matrix:")
+    print(B)
+
+    print("\nPermutation:", bestPermutation)
+    print("Biggest difference:", bestComponentDifference)
+
+    print("\nPermuted first matrix:")
+    print(A[bestPermutation][:, bestPermutation])
+
+    print("\nDifference:")
+    print(A[bestPermutation][:, bestPermutation] - B)
+
+def loadMatlabMatrix(txtFile, dim):
+    matrix = np.zeros((dim,dim), dtype=np.float32)
+    with open(txtFile, "r") as file:
+        for i, line in enumerate(file):
+            line = line.strip("\n").lstrip(" ")
+            values = [np.float32(val.strip(" "))  for val in line.split(" ") if val != ""]
+            matrix[i,:] = values
+    return matrix
 
 if __name__ == "__main__":
     paramterList = sys.argv[1:]
