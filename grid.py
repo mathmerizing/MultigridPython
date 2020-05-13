@@ -111,8 +111,8 @@ class Triangle():
             raise NotImplementedError()
 
         if degree == 2:
-            for edge in self.edges:
-                _, midpoint = edge.getChildren()
+            for i in [2,0,1]:
+                _, midpoint = self.edges[i].getChildren()
                 self.dofs.append(midpoint)
 
     def jacobi(self):
