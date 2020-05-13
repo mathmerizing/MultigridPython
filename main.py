@@ -29,8 +29,8 @@ def run():
     # TODO: Debug degree = 2,3 !!!!
 
     # 2. getCoarseGrid
-    #coarseGrid = homeworkGrid(degree = DEGREE)
-    coarseGrid = unitSquare(degree = DEGREE)
+    coarseGrid = homeworkGrid(degree = DEGREE)
+    #coarseGrid = unitSquare(degree = DEGREE)
     if SHOW_GRIDS:
         print(coarseGrid)
         coarseGrid.plot(title = "Coarse Grid")
@@ -39,13 +39,18 @@ def run():
     coarseMatrix, coarseRHS = assembleSystem(coarseGrid, K, M)
     applyBoundaryCondition(coarseGrid,coarseMatrix,coarseRHS)
 
-    B = loadMatlabMatrix("matlab_matrix.txt",4)
+    """
+    B = loadMatlabMatrix("matlab_matrix.txt",coarseMatrix.shape[0])
     matricesPermutationEquivalent(coarseMatrix.todense(),B)
     quit()
+    """
 
     print(coarseMatrix.todense())
     print(coarseRHS)
-    print(np.dot(np.linalg.inv(coarseMatrix.todense()),coarseRHS))
+    solution = np.dot(np.linalg.inv(coarseMatrix.todense()),coarseRHS)
+    print(solution)
+    saveVtk(np.array(solution).flatten(), coarseGrid)
+
     quit()
 
     # 4. global grid refinement + assemble finer grid matrices
@@ -103,6 +108,34 @@ def loadMatlabMatrix(txtFile, dim):
             values = [np.float32(val.strip(" "))  for val in line.split(" ") if val != ""]
             matrix[i,:] = values
     return matrix
+
+def saveVtk(solution, grid, fileName = "solution.vtk"):
+    lines = ["# vtk DataFile Version 3.0", "PDE solution", "ASCII", "DATASET UNSTRUCTURED_GRID"]
+
+    lines.append(f"POINTS {len(grid.dofs)} double")
+    for dof in grid.dofs:
+        lines.append(f"{dof.x} {dof.y} 0.0")
+
+    basisSize = 3 if grid.degree == 1 else 6
+    cellType = 5 if grid.degree == 1 else 22
+    numTriangles = len(grid.triangles)
+
+    lines.append(f"CELLS {numTriangles} {numTriangles * (basisSize + 1)}")
+    for triangle in grid.triangles:
+        lines.append(f"{basisSize} {' '.join([str(dof.ind) for dof in triangle.dofs])}")
+
+    lines.append(f"CELL_TYPES {numTriangles}")
+    lines += numTriangles * [f"{cellType}"]
+
+    lines.append(f"POINT_DATA {len(grid.dofs)}")
+    lines.append("SCALARS u(x,y) double 1")
+    lines.append("LOOKUP_TABLE default")
+
+    for i in range(len(grid.dofs)):
+        lines.append(str(solution[i]))
+
+    with open(fileName, "w") as file:
+        file.write("\n".join(lines))
 
 if __name__ == "__main__":
     paramterList = sys.argv[1:]
