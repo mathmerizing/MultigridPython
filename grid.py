@@ -331,6 +331,40 @@ class Grid():
             for edge in triangle.edges:
                 edge.distributeDofs(degree = self.degree)
 
+    def printFatherSonList(self):
+        numDofsDigits = len(str(len(self.dofs)))
+        sonColumnWidth = max(numDofsDigits, 3)
+        fatherColumnWidth = max(numDofsDigits, 8)
+
+        # create header of table
+        header = "|"
+        header += prettyString("SON", sonColumnWidth) + "|"
+        header += "Level||"
+        for i in range(1,3):
+            header += prettyString(f"FATHER {i}", sonColumnWidth) + "|"
+
+        print(len(header) * "-")
+        print(header)
+        print(len(header) * "-")
+        print(len(header) * "-")
+
+        for dof in self.dofs:
+            a = prettyString(str(dof.ind + 1), sonColumnWidth)
+            b = prettyString(str(dof.lvl), 5)
+            if len(dof.fathers) > 0:
+                parentIds = sorted([dad.ind + 1 for dad in dof.fathers])
+                c = prettyString(str(parentIds[0]), fatherColumnWidth)
+                d = prettyString(str(parentIds[1]), fatherColumnWidth)
+            else:
+                c = prettyString("X", fatherColumnWidth)
+                d = c
+            print(f"|{a}|{b}||{c}|{d}|")
+            print(len(header) * "-")
+
+
+def prettyString(string, length):
+    return (length - len(string)) * " " + string
+
 def homeworkGrid(degree = 1):
     # create nodes of L-shape
     nodes = []

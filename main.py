@@ -75,6 +75,8 @@ def run():
         print(f"Matrix on level {i+1}:")
         print(levelMatrix.todense())
 
+    print("")
+    grids[-1].printFatherSonList()
     # 5. Multigrid ...
 
 def matricesPermutationEquivalent(A,B):
