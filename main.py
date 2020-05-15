@@ -3,7 +3,7 @@ from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from grid import homeworkGrid, unitSquare
 import sys
 
-GLOBAL_REFINEMENTS = 1
+GLOBAL_REFINEMENTS = 2
 SHOW_GRIDS         = True
 DEGREE             = 1
 
@@ -26,7 +26,6 @@ def parseParameters(paramterList):
 def run():
     # 1. getLocalMatrices
     K , M = getLocalMatrices(degree = DEGREE)
-    # TODO: Debug degree = 2,3 !!!!
 
     # 2. getCoarseGrid
     coarseGrid = homeworkGrid(degree = DEGREE)
@@ -45,13 +44,17 @@ def run():
     quit()
     """
 
+    print("Coarse matrix:")
     print(coarseMatrix.todense())
+    print("Coarse RHS:")
     print(coarseRHS)
+
+    """
     solution = np.dot(np.linalg.inv(coarseMatrix.todense()),coarseRHS)
     print(solution)
     saveVtk(np.array(solution).flatten(), coarseGrid)
-
     quit()
+    """
 
     # 4. global grid refinement + assemble finer grid matrices
     grids = [coarseGrid]
@@ -68,9 +71,10 @@ def run():
 
         # assemble level matrix and apply boundary conditions
         levelMatrix, levelRHS = assembleSystem(levelGrid, K, M)
-        levelMatrix, levelRHS = applyBoundaryCondition(levelGrid,levelMatrix,levelRHS)
+        applyBoundaryCondition(levelGrid,levelMatrix,levelRHS)
+        print(f"Matrix on level {i+1}:")
         print(levelMatrix.todense())
-        print(levelRHS)
+
     # 5. Multigrid ...
 
 def matricesPermutationEquivalent(A,B):

@@ -2,19 +2,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Node():
-    def __init__(self, x, y, ind = -1):
+    def __init__(self, x, y, ind = -1, lvl = 0, fathers = []):
         self.x = x
         self.y = y
         self.ind = ind
+        self.lvl = lvl
+        self.fathers = fathers
 
     def __str__(self):
-        return f"({self.x},{self.y}) [{self.ind+1}]"
+        fatherStr = "None" if len(self.fathers) == 0 else ",".join(sorted([str(f.ind+1) for f in self.fathers]))
+        return f"({self.x},{self.y}) [{self.ind+1}] (lvl = {self.lvl},dads = {fatherStr})"
 
     def dist(self, other):
         return np.sqrt((self.x-other.x)**2 + (self.y-other.y)**2)
 
     def midpoint(self,other):
-        return Node(0.5*(self.x+other.x),0.5*(self.y+other.y))
+        return Node(
+            0.5*(self.x+other.x),
+            0.5*(self.y+other.y),
+            lvl = max(self.lvl, other.lvl) + 1,
+            fathers=[self, other]
+        )
 
 class Edge():
     def __init__(self, start, end, boundaryConstraint = None):

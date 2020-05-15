@@ -1,4 +1,4 @@
 # MultigridPython
 
-- [ ] Create basic FEM program
-- [ ]  Setup demo problem
+- [x] Create basic FEM program
+- [x]  Setup demo problem
