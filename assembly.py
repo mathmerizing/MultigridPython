@@ -1,5 +1,4 @@
 import numpy as np
-from sympy import symbols, diff, integrate
 from scipy.sparse import dok_matrix
 from grid import BoundaryCondition
 
@@ -8,73 +7,82 @@ def getLocalMatrices(degree = 1):
     Assemble the local stiffness matrices K = [K_xx, K_xy, K_yy]
     and the local mass matrix M.
     """
-    x, y = symbols('x y')
+    assert degree in [1,2], f"Degree {degree} is not currently supported"
 
     if degree == 1:
-        # linear basis
-        phi = [
-            1-x-y,
-            x,
-            y
-        ]
+        K_xx = np.array(
+        [[ 0.5, -0.5,  0. ],
+         [-0.5,  0.5,  0. ],
+         [ 0.,    0.,  0. ]],
+        dtype=np.float32
+        )
+
+        K_xy = np.array(
+        [[ 0.5,  0.,  -0.5],
+         [-0.5,  0.,   0.5],
+         [ 0.,   0.,   0. ]],
+        dtype=np.float32
+        )
+
+        K_yy = np.array(
+        [[ 0.5,  0.,  -0.5],
+         [ 0.,   0.,   0. ],
+         [-0.5,  0.,   0.5]],
+        dtype=np.float32
+        )
+
+        M = np.array(
+        [[0.08333334, 0.04166667, 0.04166667],
+         [0.04166667, 0.08333334, 0.04166667],
+         [0.04166667, 0.04166667, 0.08333334]],
+        dtype=np.float32
+        )
+
+        return [K_xx, K_xy, K_yy], M
+
     elif degree == 2:
-        # quadratic basis
-        phi = [
-            (1-x-y)*(1-2*x-2*y),
-            x*(2*x-1),
-            y*(2*y-1),
-            4*x*(1-x-y),
-            4*x*y,
-            4*y*(1-x-y)
-        ]
-    elif degree == 3:
-        # cubic basis
-        phi = [
-            (1-x-y)*(1-3*x-3*y)*(2-3*x-3*y),
-            x*(3*x-1)*(3*x-2),
-            y*(3*y-1)*(3*y-2),
-            9/2*x*(1-x-y)*(2-3*x-3*y),
-            9/2*x*(1-x-y)*(3*x+3*y-1),
-            9/2*x*y*(3*x-2),
-            9/2*x*y*(3*y-2),
-            9/2*y*(1-x-y)*(3*x+3*y-1),
-            9/2*y*(1-x-y)*(2-3*x-3*y),
-            27*x*y*(1-x-y)
-        ]
+        K_xx = np.array(
+        [[ 0.5,         0.16666667,  0.,         -0.6666667,   0.,          0.        ],
+         [ 0.16666667,  0.5,         0.,         -0.6666667,   0.,          0.        ],
+         [ 0.,          0.,          0.,          0.,          0.,          0.        ],
+         [-0.6666667,  -0.6666667,   0.,          1.3333334,   0.,          0.        ],
+         [ 0.,          0.,          0.,          0.,          1.3333334,  -1.3333334 ],
+         [ 0.,          0.,          0.,          0.,         -1.3333334,   1.3333334 ]],
+        dtype=np.float32
+        )
 
-    # compute derivatives of basis in x and y direction
-    phi_x = [diff(phi_i, x) for phi_i in phi]
-    phi_y = [diff(phi_i, y) for phi_i in phi]
+        K_xy = np.array(
+        [[ 0.5,         0.,          0.16666667,  0.,          0.,         -0.6666667 ],
+         [ 0.16666667,  0.,         -0.16666667, -0.6666667,   0.6666667,   0.        ],
+         [ 0.,          0.,          0.,          0.,          0.,          0.        ],
+         [-0.6666667,   0.,          0.,          0.6666667,  -0.6666667,   0.6666667 ],
+         [ 0.,          0.,          0.6666667,  -0.6666667,   0.6666667,  -0.6666667 ],
+         [ 0.,          0.,         -0.6666667,   0.6666667,  -0.6666667,   0.6666667 ]],
+        dtype=np.float32
+        )
 
-    # compute local stiffness matrices
-    K = []
-    for (f,g) in [(phi_x,phi_x), (phi_x,phi_y), (phi_y,phi_y)]:
-        n, m = len(f), len(g)
-        mat  = np.zeros((n, m), dtype=np.float32)
+        K_yy = np.array(
+        [[ 0.5,         0.,          0.16666667,  0.,          0.,         -0.6666667 ],
+         [ 0.,          0.,          0.,          0.,          0.,          0.        ],
+         [ 0.16666667,  0.,          0.5,         0.,          0.,         -0.6666667 ],
+         [ 0.,          0.,          0.,          1.3333334,  -1.3333334,   0.        ],
+         [ 0.,          0.,          0.,         -1.3333334,   1.3333334,   0.        ],
+         [-0.6666667,   0.,         -0.6666667,   0.,          0.,          1.3333334 ]],
+        dtype=np.float32
+        )
 
-        for i in range(n):
-            for j in range(m):
-                mat[i,j] = integrate(
-                            f[i] * g[j],
-                            (x,0,1-y),
-                            (y,0,1)
-                )
+        M = np.array(
+        [[ 0.01666667, -0.00277778, -0.00277778,  0.,         -0.01111111,  0.        ],
+         [-0.00277778,  0.01666667, -0.00277778,  0.,          0.,         -0.01111111],
+         [-0.00277778, -0.00277778,  0.01666667, -0.01111111,  0.,          0.        ],
+         [ 0.,          0.,         -0.01111111,  0.08888889,  0.04444445,  0.04444445],
+         [-0.01111111,  0.,          0.,          0.04444445,  0.08888889,  0.04444445],
+         [ 0.,         -0.01111111,  0.,          0.04444445,  0.04444445,  0.08888889]],
+        dtype=np.float32
+        )
 
-        K.append(mat)
+        return [K_xx, K_xy, K_yy], M
 
-    # compute local mass matrix
-    dim = len(phi)
-    M   = np.zeros((dim, dim), dtype=np.float32)
-
-    for i in range(dim):
-        for j in range(dim):
-            M[i,j] = integrate(
-                        phi[i] * phi[j],
-                        (x,0,1-y),
-                        (y,0,1)
-            )
-
-    return K, M
 
 def assembleSystem(grid, K, M):
     """
