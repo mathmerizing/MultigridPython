@@ -1,9 +1,10 @@
 import numpy as np
 from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from grid import homeworkGrid, unitSquare
+from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel
 import sys
 
-GLOBAL_REFINEMENTS = 2
+GLOBAL_REFINEMENTS = 1
 SHOW_GRIDS         = True
 DEGREE             = 1
 
@@ -79,6 +80,18 @@ def run():
     grids[-1].printFatherSonList()
     # 5. Multigrid ...
 
+
+    # TEST SOLVERS ON FINEST GRID:
+    #solver = Jacobi()
+    #solution, iter = solver(coarseMatrix, coarseRHS, startVector = np.zeros(coarseRHS.shape), maxIter = 200, epsilon = 1e-12, omega = 1.)
+
+    solver = ForwardGaussSeidel()
+    #solver = BackwardGaussSeidel()
+    solution, iter = solver(levelMatrix, levelRHS, startVector = np.zeros(levelRHS.shape), maxIter = 400, epsilon = 1e-12)
+    saveVtk(solution, grids[-1])
+    analyzeSolution(solution, iter, grids[-1], levelMatrix, levelRHS)
+
+
 def matricesPermutationEquivalent(A,B):
     from itertools import permutations
 
@@ -142,6 +155,22 @@ def saveVtk(solution, grid, fileName = "solution.vtk"):
 
     with open(fileName, "w") as file:
         file.write("\n".join(lines))
+
+
+def analyzeSolution(solution, iter, grid, matrix, rhs):
+    print("*** ANALYSIS OF SOLUTION OF ITERATIVE SOLVER: ***")
+    print("Iterations:", iter)
+    print("Solution of iterative solver:\n", solution)
+    print("Residual of solution:\n", np.linalg.norm(rhs - matrix.dot(solution)))
+
+    print()
+    print("Solution at each DoF:")
+    for dof in grid.dofs:
+        print(f"({dof.x},{dof.y}): {solution[dof.ind]}")
+    print()
+
+    exactSolution = np.dot(np.linalg.inv(matrix.todense()),rhs)
+    print("exactSolution:\n",exactSolution)
 
 if __name__ == "__main__":
     paramterList = sys.argv[1:]
