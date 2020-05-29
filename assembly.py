@@ -90,8 +90,8 @@ def assembleSystem(grid, K, M):
     and the information stored in the grid.
     """
     numDofs = len(grid.dofs)
-    systemMatrix    = dok_matrix((numDofs,numDofs),dtype=np.float32)
-    systemRightHand = np.zeros(numDofs,dtype=np.float32)
+    systemMatrix    = dok_matrix((numDofs,numDofs), dtype=np.float32)
+    systemRightHand = np.zeros(numDofs, dtype=np.float32)
 
     for triangle in grid.triangles:
         # get all important triangle/ material parameters

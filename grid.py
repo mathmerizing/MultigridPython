@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.sparse import eye
 
 class Node():
     def __init__(self, x, y, ind = -1, lvl = 0, fathers = []):
@@ -361,6 +362,24 @@ class Grid():
             print(f"|{a}|{b}||{c}|{d}|")
             print(len(header) * "-")
 
+    def getInterpolationMatrix(self):
+        maxLevel = self.dofs[-1].lvl
+        assert maxLevel > 0, "Can't create Galerkin interpolation matrix of coarse level."
+
+        numberOldDofs = -1
+        for dof in self.dofs[::-1]:
+            if dof.lvl < maxLevel:
+                numberOldDofs = dof.ind + 1
+                break
+
+        interpolationMatrix = eye(m = len(self.dofs), n = numberOldDofs,
+                                    dtype = np.float32, format="dok")
+
+        for dof in self.dofs[numberOldDofs:]:
+            for father in dof.fathers:
+                interpolationMatrix[dof.ind,father.ind] = 0.5
+
+        return interpolationMatrix.tocsr()
 
 def prettyString(string, length):
     return (length - len(string)) * " " + string
