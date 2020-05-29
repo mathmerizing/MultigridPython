@@ -2,7 +2,7 @@ import numpy as np
 from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel
 from main import saveVtk, analyzeSolution
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, inv
 
 class Multigrid():
     def __init__(self, coarseGrid, numberLevels = 2, showGrids = False):
@@ -69,7 +69,7 @@ class Multigrid():
         # 3. Coarse grid solution
         if level - 1 == 0:
             # direct solver on coarsest grid
-            coarserSolution = spsolve(self.levelMatrices[0], defect)
+            coarserSolution = inv(self.levelMatrices[0].tocsc()).dot(defect)
         else:
             # level > 1
             for i in range(mu):
