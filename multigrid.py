@@ -1,7 +1,9 @@
-import numpy as np
-from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
+from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition, distributeBoundaryCondition
 from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel
 from main import saveVtk, analyzeSolution
+
+import numpy as np
+import logging
 from scipy.sparse.linalg import spsolve, inv
 
 class Multigrid():
@@ -59,41 +61,52 @@ class Multigrid():
     def defect(self, rightHandSide, solution, lvl):
         return rightHandSide - self.levelMatrices[lvl].dot(solution)
 
-    def mgm(self, startVector, rightHandSide, level, mu, smoother, preSmooth, postSmooth, epsilon):
+    def mgm(self, startVector, rightHandSide, level, mu, preSmoother, postSmoother, preSmoothSteps, postSmoothSteps, epsilon):
+        #logging.debug(f"PreSmooth on level: {level}")
+
         # 1. Pre-smoothing
-        solution, _ = smoother({"systemMatrix": self.levelMatrices[level],"rightHandSide": rightHandSide, "startVector": startVector, "maxIter": preSmooth, "epsilon": epsilon})
+        solution, _ = preSmoother({"systemMatrix": self.levelMatrices[level],"rightHandSide": rightHandSide, "startVector": startVector, "maxIter": preSmoothSteps, "epsilon": epsilon})
 
         # 2. Compute defect and restrict to level-1
         defect = self.restrict(self.defect(rightHandSide, solution, level), level)
+        print(f"Norm on level {level} - before: ",np.linalg.norm(defect))
 
         # 3. Coarse grid solution
         if level - 1 == 0:
+            #logging.debug(f"Coarse solve on level: {level-1}")
+
             # direct solver on coarsest grid
             coarserSolution = inv(self.levelMatrices[0].tocsc()).dot(defect)
         else:
             # level > 1
+            coarserSolution = np.zeros(defect.shape)
             for i in range(mu):
-                coarserSolution = np.zeros(defect.shape)
                 coarserSolution = self.mgm(
                     startVector = coarserSolution,
                     rightHandSide = defect,
                     level = level - 1,
                     mu = mu,
-                    smoother = smoother,
-                    preSmooth = preSmooth,
-                    postSmooth = postSmooth,
+                    preSmoother = preSmoother,
+                    postSmoother = postSmoother,
+                    preSmoothSteps = preSmoothSteps,
+                    postSmoothSteps = postSmoothSteps,
                     epsilon = epsilon
                 )
 
         # 4. update by interpolation of coarser grid solution
+        applyBoundaryCondition(grid = self.grids[level - 1], vector = coarserSolution)
         solution += self.prolongate(coarserSolution, level)
 
+        print(f"Norm on level {level} - after: ",np.linalg.norm(self.defect(rightHandSide, solution, level)))
+        quit()
+        #logging.debug(f"PostSmooth on level: {level}")
+
         # 5. post smoothing
-        solution, _ = smoother({"systemMatrix": self.levelMatrices[level],"rightHandSide": rightHandSide, "startVector": solution, "maxIter": postSmooth, "epsilon": epsilon})
+        solution, _ = postSmoother({"systemMatrix": self.levelMatrices[level],"rightHandSide": rightHandSide, "startVector": solution, "maxIter": postSmoothSteps, "epsilon": epsilon})
 
         return solution
 
-    def __call__(self, startVector = None, cycle = "V", smoother = lambda x: Jacobi()(**x, omega = 1.0), preSmooth = 1, postSmooth = 1, maxIter = 100, epsilon = 1e-12):
+    def __call__(self, startVector = None, cycle = "W", preSmoother = lambda x: ForwardGaussSeidel()(**x), postSmoother = lambda x: BackwardGaussSeidel()(**x), preSmoothSteps = 2, postSmoothSteps = 2, maxIter = 100, epsilon = 1e-12):
         # initialize additional variables
         if startVector is None:
             startVector = np.zeros(self.levelRHS[-1].shape)
@@ -110,12 +123,16 @@ class Multigrid():
         iterations = maxIter
 
         for iter in range(maxIter):
+            # log defect before iteration
+            normOfDefect = np.linalg.norm(self.defect(self.levelRHS[-1], solution, self.numberLevels - 1))
+            logging.debug(f"{iter}.th defect: {normOfDefect}")
+
             # solution accurate enough
-            if np.linalg.norm(self.defect(self.levelRHS[-1], solution, self.numberLevels - 1)) < epsilon:
+            if  normOfDefect < epsilon:
                 iterations = iter
                 break
 
-            solution = self.mgm(solution, self.levelRHS[-1], self.numberLevels - 1, mu, smoother, preSmooth, postSmooth, epsilon)
+            solution = self.mgm(solution, self.levelRHS[-1], self.numberLevels - 1, mu, preSmoother, postSmoother, preSmoothSteps, postSmoothSteps, epsilon)
 
         print(iter)
         print(solution)

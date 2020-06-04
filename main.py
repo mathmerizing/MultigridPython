@@ -85,11 +85,16 @@ def run():
     #solver = Jacobi()
     #solution, iter = solver(coarseMatrix, coarseRHS, startVector = np.zeros(coarseRHS.shape), maxIter = 200, epsilon = 1e-12, omega = 1.)
 
-    solver = ForwardGaussSeidel()
+    #solver = ForwardGaussSeidel()
     #solver = BackwardGaussSeidel()
-    solution, iter = solver(levelMatrix, levelRHS, startVector = np.zeros(levelRHS.shape), maxIter = 400, epsilon = 1e-12)
-    saveVtk(solution, grids[-1])
-    analyzeSolution(solution, iter, grids[-1], levelMatrix, levelRHS)
+    #solution, iter = solver(levelMatrix, levelRHS, startVector = np.zeros(levelRHS.shape), maxIter = 400, epsilon = 1e-12)
+    #saveVtk(solution, grids[-1])
+    #analyzeSolution(solution, iter, grids[-1], levelMatrix, levelRHS)
+
+    # print last interpolationMatrix
+    interpolationMatrix = grids[-1].getInterpolationMatrix()
+    print("LAST INTERPOLATION MATRIX:")
+    print(interpolationMatrix.todense())
 
 
 def matricesPermutationEquivalent(A,B):

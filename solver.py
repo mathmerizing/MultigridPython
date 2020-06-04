@@ -1,4 +1,4 @@
-from scipy.sparse import diags # ????
+from scipy.sparse import diags
 import numpy as np
 from abc import ABC, abstractmethod
 

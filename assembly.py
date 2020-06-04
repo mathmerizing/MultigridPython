@@ -122,18 +122,30 @@ def assembleSystem(grid, K, M):
 
     return systemMatrix.tocsr(), systemRightHand
 
-def applyBoundaryCondition(grid,systemMatrix,systemRightHand):
+def applyBoundaryCondition(grid,matrix = None,vector = None):
     """
-    Apply Dirichlet or Neumann boundary conditions to the system matrix
-    and the right hand side.
+    Apply Dirichlet or Neumann boundary conditions to a matrix and vector
     """
     for edge in grid.edges:
         if edge.boundaryConstraint is not None:
             if edge.boundaryConstraint.type == "Dirichlet":
                 for dof in edge.dofs:
-                    systemRightHand[dof.ind] = edge.boundaryConstraint.function(dof.x,dof.y)
-                    # set row dof.ind to 0.0
-                    systemMatrix.data[systemMatrix.indptr[dof.ind]:systemMatrix.indptr[dof.ind+1]] = 0.0
-                    systemMatrix[dof.ind, dof.ind] = 1.0
+                    vector[dof.ind] = edge.boundaryConstraint.function(dof.x,dof.y)
+                    if matrix is not None:
+                        # set row dof.ind to 0.0
+                        matrix.data[matrix.indptr[dof.ind]:matrix.indptr[dof.ind+1]] = 0.0
+                        matrix[dof.ind, dof.ind] = 1.0
+            if edge.boundaryConstraint.type == "Neumann":
+                pass
+
+def distributeBoundaryCondition(grid,vector):
+    """
+    Apply Dirichlet or Neumann boundary conditions to a vector.
+    """
+    for edge in grid.edges:
+        if edge.boundaryConstraint is not None:
+            if edge.boundaryConstraint.type == "Dirichlet":
+                for dof in edge.dofs:
+                    vector[dof.ind] = edge.boundaryConstraint.function(dof.x,dof.y)
             if edge.boundaryConstraint.type == "Neumann":
                 pass
