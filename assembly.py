@@ -122,7 +122,7 @@ def assembleSystem(grid, K, M):
 
     return systemMatrix.tocsr(), systemRightHand
 
-def applyBoundaryCondition(grid,matrix = None,vector = None):
+def applyBoundaryCondition(grid,matrix = None,vector = None,homogenize = False):
     """
     Apply Dirichlet or Neumann boundary conditions to a matrix and vector
     """
@@ -130,22 +130,10 @@ def applyBoundaryCondition(grid,matrix = None,vector = None):
         if edge.boundaryConstraint is not None:
             if edge.boundaryConstraint.type == "Dirichlet":
                 for dof in edge.dofs:
-                    vector[dof.ind] = edge.boundaryConstraint.function(dof.x,dof.y)
+                    vector[dof.ind] = edge.boundaryConstraint.function(dof.x,dof.y) if not homogenize else 0.0
                     if matrix is not None:
                         # set row dof.ind to 0.0
                         matrix.data[matrix.indptr[dof.ind]:matrix.indptr[dof.ind+1]] = 0.0
                         matrix[dof.ind, dof.ind] = 1.0
-            if edge.boundaryConstraint.type == "Neumann":
-                pass
-
-def distributeBoundaryCondition(grid,vector):
-    """
-    Apply Dirichlet or Neumann boundary conditions to a vector.
-    """
-    for edge in grid.edges:
-        if edge.boundaryConstraint is not None:
-            if edge.boundaryConstraint.type == "Dirichlet":
-                for dof in edge.dofs:
-                    vector[dof.ind] = edge.boundaryConstraint.function(dof.x,dof.y)
             if edge.boundaryConstraint.type == "Neumann":
                 pass

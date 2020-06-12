@@ -1,100 +1,97 @@
-import numpy as np
 from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from grid import homeworkGrid, unitSquare
 from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel
+
 import sys
+import logging
+import numpy as np
 
-GLOBAL_REFINEMENTS = 1
-SHOW_GRIDS         = True
-DEGREE             = 1
+parameters = {
+    "LEVELS": 5,
+    "SHOW_GRIDS": False,
+    "DEGREE": 1,
+    "CYCLE": "W",
+    "MAX_ITER": 100,
+    "SMOOTHING_STEPS": 2,
+    "SMOOTHER": "Jacobi",
+    "OMEGA": 0.8
+}
 
-def parseParameters(paramterList):
-    for i, parameter in enumerate(paramterList):
-        global GLOBAL_REFINEMENTS, SHOW_GRIDS, DEGREE
+def getParam(userInput, default):
+    if userInput == "":
+        return default
+    else:
+        return userInput
 
-        if "--" not in parameter:
-            continue
-        # parse flag and parameters
-        if "refinements" in parameter:
-            GLOBAL_REFINEMENTS = int(paramterList[i+1])
-        if "visualize" in parameter:
-            SHOW_GRIDS = True
-        if "release" in parameter:
-            SHOW_GRIDS = False
-        if "degree" in parameter:
-            DEGREE = int(paramterList[i+1])
+def inputParameters():
+    print("==================")
+    print("* DEFAULT VALUES *")
+    print("==================")
+
+    for key in parameters:
+        print(f"{key}{' '*(20-len(key))}= {parameters[key]}")
+    print("")
+
+    change = input("Would you like to change some values? (Y/N): ")
+    if change in ["Y","y","yes", "YES", "Yes", "ja", "Ja", "JA"]:
+        # manually change all parameters
+        lvls = parameters["LEVELS"]
+        parameters["LEVELS"] = int(getParam(input(f"Number of MG levels (default: {lvls}) = "),lvls))
+
+        show = parameters["SHOW_GRIDS"]
+        parameters["SHOW_GRIDS"] = bool(getParam(input(f"Plot grids (default: {show}) = "),show))
+
+        deg = parameters["DEGREE"]
+        parameters["DEGREE"] = int(getParam(input(f"Degree of FE (default: {deg}) = "),deg))
+
+        cyc = parameters["CYCLE"]
+        parameters["CYCLE"] = getParam(input(f"Multigrid cycle (default: {cyc}; supported: 'V','W') = "),cyc)
+
+        it = parameters["MAX_ITER"]
+        parameters["MAX_ITER"] = int(getParam(input(f"Maximum number of MG iterations (default: {it}) = "),it))
+
+        st = parameters["SMOOTHING_STEPS"]
+        parameters["SMOOTHING_STEPS"] = int(getParam(input(f"Number of smoothing steps (default: {st}) = "),st))
+
+        sm = parameters["SMOOTHER"]
+        parameters["SMOOTHER"] = getParam(input(f"Smoother type (default: {sm}; supported: 'Jacobi','GaussSeidel') = "),sm)
+
+        if parameters["SMOOTHER"] == "Jacobi":
+            om = parameters["OMEGA"]
+            parameters["OMEGA"] = float(getParam(input(f"Relaxation parameter omega (default: {om}) = "),om))
+
+        print("")
+        print("=================")
+        print("* CUSTOM VALUES *")
+        print("=================")
+        for key in parameters:
+            print(f"{key}{' '*(20-len(key))}= {parameters[key]}")
+        print("")
 
 def run():
-    # 1. getLocalMatrices
-    K , M = getLocalMatrices(degree = DEGREE)
+    from multigrid import Multigrid
+    logging.info("Starting run method...")
+    coarseGrid = homeworkGrid()
+    mg         = Multigrid(coarseGrid, numberLevels = parameters["LEVELS"], showGrids = parameters["SHOW_GRIDS"])
+    mg.buildTransfer() # compute transfer matrices
 
-    # 2. getCoarseGrid
-    coarseGrid = homeworkGrid(degree = DEGREE)
-    #coarseGrid = unitSquare(degree = DEGREE)
-    if SHOW_GRIDS:
-        print(coarseGrid)
-        coarseGrid.plot(title = "Coarse Grid")
+    if parameters["SMOOTHER"] == "GaussSeidel":
+        PRE_SMOOTHER  = lambda x: ForwardGaussSeidel()(**x)
+        POST_SMOOTHER = lambda x: BackwardGaussSeidel()(**x)
+    else:
+        # parameters["SMOOTHER"] == "Jacobi"
+        PRE_SMOOTHER  = lambda x: Jacobi()(**x, omega = parameters["OMEGA"])
+        POST_SMOOTHER = lambda x: Jacobi()(**x, omega = parameters["OMEGA"])
 
-    # 3. assemble, apply BC
-    coarseMatrix, coarseRHS = assembleSystem(coarseGrid, K, M)
-    applyBoundaryCondition(coarseGrid,coarseMatrix,coarseRHS)
-
-    """
-    B = loadMatlabMatrix("matlab_matrix.txt",coarseMatrix.shape[0])
-    matricesPermutationEquivalent(coarseMatrix.todense(),B)
-    quit()
-    """
-
-    print("Coarse matrix:")
-    print(coarseMatrix.todense())
-    print("Coarse RHS:")
-    print(coarseRHS)
-
-    """
-    solution = np.dot(np.linalg.inv(coarseMatrix.todense()),coarseRHS)
-    print(solution)
-    saveVtk(np.array(solution).flatten(), coarseGrid)
-    quit()
-    """
-
-    # 4. global grid refinement + assemble finer grid matrices
-    grids = [coarseGrid]
-    for i in range(GLOBAL_REFINEMENTS):
-        # refine finest grid
-        levelGrid = grids[-1].refine()
-
-        # print and visualize level grid
-        if SHOW_GRIDS:
-            print(levelGrid)
-            levelGrid.plot(title = f"Grid on level {i+1}")
-
-        grids.append(levelGrid)
-
-        # assemble level matrix and apply boundary conditions
-        levelMatrix, levelRHS = assembleSystem(levelGrid, K, M)
-        applyBoundaryCondition(levelGrid,levelMatrix,levelRHS)
-        print(f"Matrix on level {i+1}:")
-        print(levelMatrix.todense())
-
-    print("")
-    grids[-1].printFatherSonList()
-    # 5. Multigrid ...
-
-
-    # TEST SOLVERS ON FINEST GRID:
-    #solver = Jacobi()
-    #solution, iter = solver(coarseMatrix, coarseRHS, startVector = np.zeros(coarseRHS.shape), maxIter = 200, epsilon = 1e-12, omega = 1.)
-
-    #solver = ForwardGaussSeidel()
-    #solver = BackwardGaussSeidel()
-    #solution, iter = solver(levelMatrix, levelRHS, startVector = np.zeros(levelRHS.shape), maxIter = 400, epsilon = 1e-12)
-    #saveVtk(solution, grids[-1])
-    #analyzeSolution(solution, iter, grids[-1], levelMatrix, levelRHS)
-
-    # print last interpolationMatrix
-    interpolationMatrix = grids[-1].getInterpolationMatrix()
-    print("LAST INTERPOLATION MATRIX:")
-    print(interpolationMatrix.todense())
+    # run MG algo
+    mg(
+        maxIter = parameters["MAX_ITER"],
+        cycle = parameters["CYCLE"],
+        preSmoother = PRE_SMOOTHER,
+        postSmoother = POST_SMOOTHER,
+        preSmoothSteps = parameters["SMOOTHING_STEPS"],
+        postSmoothSteps = parameters["SMOOTHING_STEPS"]
+    )
 
 
 def matricesPermutationEquivalent(A,B):
@@ -178,9 +175,6 @@ def analyzeSolution(solution, iter, grid, matrix, rhs):
     print("exactSolution:\n",exactSolution)
 
 if __name__ == "__main__":
-    paramterList = sys.argv[1:]
-    if (len(paramterList) > 0):
-        parseParameters(paramterList)
-
-    # run FEM program with Multigrid preconditioner
+    logging.basicConfig(level=logging.DEBUG , format='[%(asctime)s] - [%(levelname)s] - %(message)s')
+    inputParameters()
     run()

@@ -1,12 +1,31 @@
-from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition, distributeBoundaryCondition
+from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel
 from main import saveVtk, analyzeSolution
 
-import numpy as np
+import time
 import logging
+from functools import wraps
+import numpy as np
 from scipy.sparse.linalg import spsolve, inv
 
+# get current time in milliseconds
+millis = lambda: int(round(time.time() * 1000))
+
+# creating decorator to time functions
+def timeit(func):
+    @wraps(func)
+    def _time_it(*args, **kwargs):
+        time_before = millis()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            time_after = millis()
+            time_delta = time_after - time_before
+            logging.debug(f"{func.__name__} took {time_delta // 1000} seconds {time_delta % 1000} milliseconds.")
+    return _time_it
+
 class Multigrid():
+    @timeit
     def __init__(self, coarseGrid, numberLevels = 2, showGrids = False):
         self.numberLevels = numberLevels
 
@@ -45,6 +64,9 @@ class Multigrid():
             self.levelMatrices.append(levelMatrix)
             self.levelRHS.append(levelRHS)
 
+        logging.info(f"Number of DoFs: {len(self.grids[-1].dofs)} (by level: {','.join([str(len(g.dofs)) for g in self.grids])})")
+
+    @timeit
     def buildTransfer(self):
         self.prolongationMatrices = []
         for i in range(self.numberLevels - 1):
@@ -62,19 +84,15 @@ class Multigrid():
         return rightHandSide - self.levelMatrices[lvl].dot(solution)
 
     def mgm(self, startVector, rightHandSide, level, mu, preSmoother, postSmoother, preSmoothSteps, postSmoothSteps, epsilon):
-        #logging.debug(f"PreSmooth on level: {level}")
-
         # 1. Pre-smoothing
         solution, _ = preSmoother({"systemMatrix": self.levelMatrices[level],"rightHandSide": rightHandSide, "startVector": startVector, "maxIter": preSmoothSteps, "epsilon": epsilon})
 
         # 2. Compute defect and restrict to level-1
         defect = self.restrict(self.defect(rightHandSide, solution, level), level)
-        print(f"Norm on level {level} - before: ",np.linalg.norm(defect))
+        applyBoundaryCondition(grid = self.grids[level - 1], vector = defect, homogenize = True)
 
         # 3. Coarse grid solution
         if level - 1 == 0:
-            #logging.debug(f"Coarse solve on level: {level-1}")
-
             # direct solver on coarsest grid
             coarserSolution = inv(self.levelMatrices[0].tocsc()).dot(defect)
         else:
@@ -94,22 +112,21 @@ class Multigrid():
                 )
 
         # 4. update by interpolation of coarser grid solution
-        applyBoundaryCondition(grid = self.grids[level - 1], vector = coarserSolution)
-        solution += self.prolongate(coarserSolution, level)
-
-        print(f"Norm on level {level} - after: ",np.linalg.norm(self.defect(rightHandSide, solution, level)))
-        quit()
-        #logging.debug(f"PostSmooth on level: {level}")
+        update = self.prolongate(coarserSolution, level)
+        applyBoundaryCondition(grid = self.grids[level], vector = update, homogenize = True)
+        solution += update
 
         # 5. post smoothing
         solution, _ = postSmoother({"systemMatrix": self.levelMatrices[level],"rightHandSide": rightHandSide, "startVector": solution, "maxIter": postSmoothSteps, "epsilon": epsilon})
 
         return solution
 
+    @timeit
     def __call__(self, startVector = None, cycle = "W", preSmoother = lambda x: ForwardGaussSeidel()(**x), postSmoother = lambda x: BackwardGaussSeidel()(**x), preSmoothSteps = 2, postSmoothSteps = 2, maxIter = 100, epsilon = 1e-12):
         # initialize additional variables
         if startVector is None:
             startVector = np.zeros(self.levelRHS[-1].shape)
+            applyBoundaryCondition(grid = self.grids[-1], vector = startVector, homogenize = False)
 
         mu = -1
         if cycle == "V":
@@ -134,8 +151,7 @@ class Multigrid():
 
             solution = self.mgm(solution, self.levelRHS[-1], self.numberLevels - 1, mu, preSmoother, postSmoother, preSmoothSteps, postSmoothSteps, epsilon)
 
-        print(iter)
-        print(solution)
+        logging.info(f"GMG iterations: {iterations}")
         saveVtk(solution, self.grids[-1])
 
         return solution, iterations
