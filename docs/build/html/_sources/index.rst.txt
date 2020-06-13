@@ -13,6 +13,7 @@ TODO: installation
    :caption: Table of Contents:
 
    basics
+   results
 
 
 Indices and tables

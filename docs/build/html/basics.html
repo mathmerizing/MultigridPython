@@ -38,6 +38,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Results on Benchmark Problem" href="results.html" />
     <link rel="prev" title="Welcome to Multigrid’s documentation!" href="index.html" /> 
 </head>
 
@@ -89,10 +90,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#problem-setup">Problem setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#finite-element-method">Finite Element Method</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#grid-setup">Grid Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#two-grid-method">Two Grid Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#two-grid-algorithm">Two-grid algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multigrid-algorithm">Multigrid algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#grid-transfer">Grid transfer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results on Benchmark Problem</a></li>
 </ul>
 
             
@@ -279,10 +283,75 @@ and then refine them.</p>
 </div>
 <p>To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
 As shown in figure 3, through the refinement process a triangle is being divided
-into four smaller triangles.</p>
+into four smaller triangles. Each <code class="code docutils literal notranslate"><span class="pre">Node</span></code> object needs to know its parent nodes.
+The parents are two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
+In the literature [1] these relationships are being stored in a father son list.
+This is not needed in our case, due to Object Oriented Programming (OOP).</p>
+<p>Having refined all triangles of the coarse grid, we get a new triangulation <span class="math notranslate nohighlight">\(\mathbb{T}_1\)</span>,
+which is called the grid on level 1. The level of a grid indicates, how often we need to (globally)
+refine the coarse grid to construct that grid.</p>
+<div class="figure align-center" id="id4">
+<img alt="grid_level_1" src="_images/GridLevel1.svg" /><p class="caption"><span class="caption-text">Figure 4: Grid on level 1 (<span class="math notranslate nohighlight">\(\mathbb{T}_1\)</span>)</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </div>
-<div class="section" id="two-grid-method">
-<h2>Two Grid Method<a class="headerlink" href="#two-grid-method" title="Permalink to this headline">¶</a></h2>
+<p>We continue the process of refining the grid, until we end up with a grid, which has enough nodes
+to ensure that a sufficiently good approximation to the exact solution can be computed.</p>
+<div class="figure align-center" id="id5">
+<img alt="grid_level_2" src="_images/GridLevel2.svg" /><p class="caption"><span class="caption-text">Figure 5: Grid on level 2 (<span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span>)</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+<p>The grid on the highest level, in this case <span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span> or more generally <span class="math notranslate nohighlight">\(\mathbb{T}_L\)</span>, is called the finest grid
+and will be used to assemble the system matrix.</p>
+<p>Using the Finite Element Method, we can discretize the weak form of our PDE on each level grid
+with linear finite elements. For each level <span class="math notranslate nohighlight">\(0 \leq l \leq L\)</span>, we get a linear equation system</p>
+<div class="math notranslate nohighlight">
+\[A_l x_l = b_l \text{  with  } A_l \in \mathbb{R}^{n_l \times n_l}, x_l, b_l \in \mathbb{R}^{n_l},\]</div>
+<p>where <span class="math notranslate nohighlight">\(n_l\)</span> is the number of degrees of freedom (DoFs), which in our case corresponds to the number of nodes in the grid.
+Note that the discrete function spaces <span class="math notranslate nohighlight">\(\left( V_l \right)_{l=0}^L\)</span> from the FEM are conforming finite element spaces,
+i.e. <span class="math notranslate nohighlight">\(V_0 \subset V_1 \subset \cdots \subset V_L\)</span>. If this wasn’t the case, the grid transfer operations, which will be introduced shortly, would need to be modified.</p>
+</div>
+<div class="section" id="two-grid-algorithm">
+<h2>Two-grid algorithm<a class="headerlink" href="#two-grid-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>To understand the multigrid algorithm we start by looking at the case where we only have two grids <span class="math notranslate nohighlight">\(\mathbb{T}_{l}\)</span> and <span class="math notranslate nohighlight">\(\mathbb{T}_{l+1}\)</span>.
+The mulitgrid algorithm is then only a recursive application of the two grid version.</p>
+<div class="admonition-two-grid-algorithm admonition">
+<p class="admonition-title">Two-grid algorithm</p>
+<p>Let <span class="math notranslate nohighlight">\(A_h x_h = b_h\)</span> and <span class="math notranslate nohighlight">\(A_{2h} x_{2h} = b_{2h}\)</span> with <span class="math notranslate nohighlight">\(A_h \in \mathbb{R}^{n \times n}\)</span>,
+<span class="math notranslate nohighlight">\(A_{2h} \in \mathbb{R}^{m \times m}\)</span> and <span class="math notranslate nohighlight">\(m &lt; n\)</span>
+denote the linear equation systems from the grids <span class="math notranslate nohighlight">\(\mathbb{T}_{l+1}\)</span> and <span class="math notranslate nohighlight">\(\mathbb{T}_{l}\)</span>.
+Let the k-th iterate <span class="math notranslate nohighlight">\(x_h^k\)</span> on the finer grid be given.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;\text{def TGM(}x_h^k\text{):} \\
+&amp;\qquad\text{# 1. Apply } \nu_1 \text{ smoothing steps of an iterative method }S_1. \\
+&amp;\qquad x_h^{k,1} = S_1^{\nu_1}x_h^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
+\\
+&amp;\qquad\text{# 2. Restrict defect to coarse grid.}\\
+&amp;\qquad d_{2h}^{k} = I_h^{2h}(b_{h} - A_h x_{h}^{k,1}) \qquad{\scriptsize\textit{# }I_h^{2h}\textit{ := restriction operator}} \\
+\\
+&amp;\qquad\text{# 3. Coarse grid correction.}\\
+&amp;\qquad x_{h}^{k,2} = x_{h}^{k,1} + I_{2h}^{h}(A_{2h}^{-1}d_{2h}^{k}) \qquad{\scriptsize\textit{# }I_{2h}^h\textit{ := prolongation operator}} \\
+\\
+&amp;\qquad\text{# 4. Apply } \nu_2 \text{ smoothing steps of an iterative method }S_2. \\
+&amp;\qquad x_{h}^{k,3} = S_2^{\nu_2}x_h^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
+\\
+&amp;\qquad\text{return }x_h^{k+1} := x_h^{k,3}\end{split}\]</div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>In most cases we want the two-grid method to be a symmetric iteration.
+Therefore we need <span class="math notranslate nohighlight">\(\nu := \nu_1 = \nu_2\)</span> and <span class="math notranslate nohighlight">\(S := S_1 = S_2^\ast\)</span> [4],
+e.g. choose <span class="math notranslate nohighlight">\(S_1\)</span> as forward Gauss-Seidel and <span class="math notranslate nohighlight">\(S_2\)</span> as backward Gauss-Seidel.
+Alternatively we have also implemented the <span class="math notranslate nohighlight">\(\omega\)</span>-Jacobi method which can be used for pre- and post-smoothing.
+Furthermore <span class="math notranslate nohighlight">\(A_{2h}^{-1}d_{2h}\)</span> is not feasible to compute with a direct solver
+if <span class="math notranslate nohighlight">\(A_{2h}\)</span> is too large, which is often the case.
+Thus <span class="math notranslate nohighlight">\(A_{2h}^{-1}d_{2h}\)</span> can be understood as solving the linear equation system and can be done for example by another two-grid method. This recursion then produces the multigrid algorithm.</p>
+</div>
+</div>
+<div class="section" id="multigrid-algorithm">
+<h2>Multigrid algorithm<a class="headerlink" href="#multigrid-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+</div>
+<div class="section" id="grid-transfer">
+<h2>Grid transfer<a class="headerlink" href="#grid-transfer" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
 <p>TODO: Code Examples !!!!!</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">activations</span> <span class="kn">import</span> <span class="n">Softmax</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Softmax</span><span class="p">()</span>
@@ -293,8 +362,9 @@ into four smaller triangles.</p>
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p>Sven Beuchler. <em>Lecture notes in ‘Multigrid and domain decomposition.’</em> April 2020.</p></li>
-<li><p>Thomas Wick. <em>Numerical Methods for Partial Differential Equations.</em> 2020, pp. 229-240. URL: <a class="reference external" href="https://doi.org/10.15488/9248">https://doi.org/10.15488/9248</a>.</p></li>
+<li><p>Thomas Wick. <em>Numerical Methods for Partial Differential Equations.</em> 2020. URL: <a class="reference external" href="https://doi.org/10.15488/9248">https://doi.org/10.15488/9248</a>.</p></li>
 <li><p>Dietrich Braess. <em>Finite Elemente.</em> Springer Berlin Heidelberg, 2013. DOI: 10.1007/978-3-642-34797-9. URL: <a class="reference external" href="https://doi.org/10.1007%2F978-3-642-34797-9">https://doi.org/10.1007%2F978-3-642-34797-9</a>.</p></li>
+<li><p>Chao Chen. “Geometric multigrid for eddy current problems”. PhD thesis. 2012.</p></li>
 </ol>
 </div>
 </div>
@@ -306,6 +376,8 @@ into four smaller triangles.</p>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="results.html" class="btn btn-neutral float-right" title="Results on Benchmark Problem" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Multigrid’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

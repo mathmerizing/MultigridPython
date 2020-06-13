@@ -137,10 +137,90 @@ and then refine them.
 
 To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
 As shown in figure 3, through the refinement process a triangle is being divided
-into four smaller triangles.
+into four smaller triangles. Each :code:`Node` object needs to know its parent nodes.
+The parents are two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
+In the literature [1] these relationships are being stored in a father son list.
+This is not needed in our case, due to Object Oriented Programming (OOP).
 
-Two Grid Method
-^^^^^^^^^^^^^^^
+Having refined all triangles of the coarse grid, we get a new triangulation :math:`\mathbb{T}_1`,
+which is called the grid on level 1. The level of a grid indicates, how often we need to (globally)
+refine the coarse grid to construct that grid.
+
+.. figure:: img/GridLevel1.svg
+    :alt: grid_level_1
+    :align: center
+
+    Figure 4: Grid on level 1 (:math:`\mathbb{T}_1`)
+
+We continue the process of refining the grid, until we end up with a grid, which has enough nodes
+to ensure that a sufficiently good approximation to the exact solution can be computed.
+
+.. figure:: img/GridLevel2.svg
+    :alt: grid_level_2
+    :align: center
+
+    Figure 5: Grid on level 2 (:math:`\mathbb{T}_2`)
+
+The grid on the highest level, in this case :math:`\mathbb{T}_2` or more generally :math:`\mathbb{T}_L`, is called the finest grid
+and will be used to assemble the system matrix.
+
+Using the Finite Element Method, we can discretize the weak form of our PDE on each level grid
+with linear finite elements. For each level :math:`0 \leq l \leq L`, we get a linear equation system
+
+.. math::
+
+   A_l x_l = b_l \text{  with  } A_l \in \mathbb{R}^{n_l \times n_l}, x_l, b_l \in \mathbb{R}^{n_l},
+
+where :math:`n_l` is the number of degrees of freedom (DoFs), which in our case corresponds to the number of nodes in the grid.
+Note that the discrete function spaces :math:`\left( V_l \right)_{l=0}^L` from the FEM are conforming finite element spaces,
+i.e. :math:`V_0 \subset V_1 \subset \cdots \subset V_L`. If this wasn't the case, the grid transfer operations, which will be introduced shortly, would need to be modified.
+
+Two-grid algorithm
+^^^^^^^^^^^^^^^^^^
+To understand the multigrid algorithm we start by looking at the case where we only have two grids :math:`\mathbb{T}_{l}` and :math:`\mathbb{T}_{l+1}`.
+The mulitgrid algorithm is then only a recursive application of the two grid version.
+
+.. admonition:: Two-grid algorithm
+
+  Let :math:`A_h x_h = b_h` and :math:`A_{2h} x_{2h} = b_{2h}` with :math:`A_h \in \mathbb{R}^{n \times n}`,
+  :math:`A_{2h} \in \mathbb{R}^{m \times m}` and :math:`m < n`
+  denote the linear equation systems from the grids :math:`\mathbb{T}_{l+1}` and :math:`\mathbb{T}_{l}`.
+  Let the k-th iterate :math:`x_h^k` on the finer grid be given.
+
+  .. math::
+
+    &\text{def TGM(}x_h^k\text{):} \\
+    &\qquad\text{# 1. Apply } \nu_1 \text{ smoothing steps of an iterative method }S_1. \\
+    &\qquad x_h^{k,1} = S_1^{\nu_1}x_h^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
+    \\
+    &\qquad\text{# 2. Restrict defect to coarse grid.}\\
+    &\qquad d_{2h}^{k} = I_h^{2h}(b_{h} - A_h x_{h}^{k,1}) \qquad{\scriptsize\textit{# }I_h^{2h}\textit{ := restriction operator}} \\
+    \\
+    &\qquad\text{# 3. Coarse grid correction.}\\
+    &\qquad x_{h}^{k,2} = x_{h}^{k,1} + I_{2h}^{h}(A_{2h}^{-1}d_{2h}^{k}) \qquad{\scriptsize\textit{# }I_{2h}^h\textit{ := prolongation operator}} \\
+    \\
+    &\qquad\text{# 4. Apply } \nu_2 \text{ smoothing steps of an iterative method }S_2. \\
+    &\qquad x_{h}^{k,3} = S_2^{\nu_2}x_h^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
+    \\
+    &\qquad\text{return }x_h^{k+1} := x_h^{k,3}
+
+.. hint::
+
+  In most cases we want the two-grid method to be a symmetric iteration.
+  Therefore we need :math:`\nu := \nu_1 = \nu_2` and :math:`S := S_1 = S_2^\ast` [4],
+  e.g. choose :math:`S_1` as forward Gauss-Seidel and :math:`S_2` as backward Gauss-Seidel.
+  Alternatively we have also implemented the :math:`\omega`-Jacobi method which can be used for pre- and post-smoothing.
+  Furthermore :math:`A_{2h}^{-1}d_{2h}` is not feasible to compute with a direct solver
+  if :math:`A_{2h}` is too large, which is often the case.
+  Thus :math:`A_{2h}^{-1}d_{2h}` can be understood as solving the linear equation system and can be done for example by another two-grid method. This recursion then produces the multigrid algorithm.
+
+Multigrid algorithm
+^^^^^^^^^^^^^^^^^^^
+TODO
+
+Grid transfer
+^^^^^^^^^^^^^
+TODO
 
 TODO: Code Examples !!!!!
 
@@ -153,5 +233,6 @@ TODO: Code Examples !!!!!
 References
 ^^^^^^^^^^
 #. Sven Beuchler. *Lecture notes in 'Multigrid and domain decomposition.'* April 2020.
-#. Thomas Wick. *Numerical Methods for Partial Differential Equations.* 2020, pp. 229-240. URL: `https://doi.org/10.15488/9248 <https://doi.org/10.15488/9248>`__.
+#. Thomas Wick. *Numerical Methods for Partial Differential Equations.* 2020. URL: `https://doi.org/10.15488/9248 <https://doi.org/10.15488/9248>`__.
 #. Dietrich Braess. *Finite Elemente.* Springer Berlin Heidelberg, 2013. DOI: 10.1007/978-3-642-34797-9. URL: `https://doi.org/10.1007%2F978-3-642-34797-9 <https://doi.org/10.1007%2F978-3-642-34797-9>`__.
+#. Chao Chen. "Geometric multigrid for eddy current problems". PhD thesis. 2012.

@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -9,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; Multigrid 1.0.0 documentation</title>
+  <title>Results on Benchmark Problem &mdash; Multigrid 1.0.0 documentation</title>
   
 
   
@@ -37,8 +36,9 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="#" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Basics of Geometric Multigrid" href="basics.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -83,9 +83,12 @@
             
             
               <p class="caption"><span class="caption-text">Table of Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="basics.html">Basics of Geometric Multigrid</a></li>
-<li class="toctree-l1"><a class="reference internal" href="results.html">Results on Benchmark Problem</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Results on Benchmark Problem</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -131,12 +134,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Index</li>
+      <li>Results on Benchmark Problem</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
+            <a href="_sources/results.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -148,11 +153,42 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
 
-<h1 id="index">Index</h1>
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
 
-<div class="genindex-jumpbox">
- 
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="results-on-benchmark-problem">
+<h1>Results on Benchmark Problem<a class="headerlink" href="#results-on-benchmark-problem" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>In the following, we are describing the geometric multigrid method,
+which for certain problems yields an iterative solver
+with optimal time complexity, i.e. the solver returns a solution to a PDE in
+<span class="math notranslate nohighlight">\(O(n_{\text{DoFs}})\)</span> arithmetic operations. We will show that this can also
+be achieved for some convection-diffusion equations on uniformly refined triangular
+meshes, when discretizing with linear finite elements.</p>
+<p>TODO: Probably just make a jupyter notebook</p>
+</div>
 </div>
 
 
@@ -160,6 +196,13 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="basics.html" class="btn btn-neutral float-left" title="Basics of Geometric Multigrid" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
