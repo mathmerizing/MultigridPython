@@ -87,6 +87,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Basics of Geometric Multigrid</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#problem-setup">Problem setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#finite-element-method">Finite Element Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#two-grid-method">Two Grid Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
 </ul>
@@ -190,17 +193,75 @@ meshes, when discretizing with linear finite elements.</p>
 </div>
 <div class="section" id="problem-setup">
 <h2>Problem setup<a class="headerlink" href="#problem-setup" title="Permalink to this headline">¶</a></h2>
-<p>TODO: function space <span class="math notranslate nohighlight">\(V\)</span>
-TODO: domain <span class="math notranslate nohighlight">\(\Omega\)</span></p>
+<p>Let <span class="math notranslate nohighlight">\(\Omega := (-1,1)^2 \setminus (0,1)^2\)</span> be an L-shaped domain. We decompose the boundary of this domain <span class="math notranslate nohighlight">\(\partial\Omega\)</span> into the Neumann boundary <span class="math notranslate nohighlight">\(\Gamma_N := (0,1) \times \{0\} \cup \{0\} \times (0,1)\)</span>
+and the Dirichlet boundary <span class="math notranslate nohighlight">\(\Gamma_D := \partial\Omega \setminus \Gamma_N\)</span>.</p>
+<p>Next, we define the ansatz and test function space <span class="math notranslate nohighlight">\(V := \left\{ u \in H^1(\Omega)\mid u = 0 \text{ on } \Gamma_D \right\}\)</span>,
+where</p>
+<div class="math notranslate nohighlight">
+\[H^1(\Omega) := W^{1,2}(\Omega) := \left\{ u \in L^2(\Omega) \mid \nabla u \in L^2( \Omega ) \right\}\]</div>
+<p>is the Sobolev space containing the weakly differentiable functions
+in <span class="math notranslate nohighlight">\(\Omega\)</span>. Note that we haven’t explicitly prescribed any boundary conditions on <span class="math notranslate nohighlight">\(\Gamma_N\)</span> in the function space,
+since the homogeneous Neumann boundary conditions come up naturally when deriving the variational form of the problem.
+Further, we need a right hand side function</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f(x) :=
+\begin{cases}
+   -1 &amp; \text{for } x \in (-1,0) \times (0,1) \\
+   0 &amp; \text{for } x \in (-1,0) \times (-1,0) \\
+   1 &amp; \text{for } x \in (0,1) \times (-1,0) \\
+\end{cases}.\end{split}\]</div>
+<div class="figure align-center" id="id1">
+<img alt="domain" src="_images/domain.svg" /><p class="caption"><span class="caption-text">Figure 1: Domain <span class="math notranslate nohighlight">\(\Omega\)</span></span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>Using the parameters <span class="math notranslate nohighlight">\(a = 1\)</span> and <span class="math notranslate nohighlight">\(c = 0\)</span> in <span class="math notranslate nohighlight">\(\Omega\)</span>, we can now
+formulate the strong form of our convection diffusion equation:</p>
+<div class="admonition-strong-form admonition">
+<p class="admonition-title">Strong form</p>
+<p>Find <span class="math notranslate nohighlight">\(u: \Omega \rightarrow \mathbb{R}\)</span> such that</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}-\nabla \cdot \left( a \nabla u\right) + c u &amp;= f \quad \text{in } \Omega \qquad (1)\\
+u &amp;= 0 \quad \text{on } \Gamma_D \\
+\partial_n u &amp;= 0 \quad \text{on } \Gamma_N\end{split}\]</div>
+</div>
+<p>In the above formulation, we used the notation <span class="math notranslate nohighlight">\(\partial n := \nabla \cdot n\)</span>.
+To be able to solve this problem, we need to convert it into its integral form.
+Therefore we multiply (1) from the right with a test function <span class="math notranslate nohighlight">\(v \in V\)</span> and integrate over <span class="math notranslate nohighlight">\(\Omega\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[-\int_{\Omega} \left(\nabla \cdot \left( a \nabla u\right)\right) \cdot v\ dx
++ \int_{\Omega} c u \cdot v\ dx
+= \int_{\Omega} f \cdot v\ dx \quad \forall v \in V\]</div>
+<p>Now integration of parts can be applied to the first integral and we use the fact that <span class="math notranslate nohighlight">\(\partial \Omega = \Gamma_D\ \dot\cup\ \Gamma_N\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\int_{\Omega} a \nabla u \cdot \nabla v\ dx
+-\int_{\Gamma_D} a \partial_n u \cdot v\ ds
+-\int_{\Gamma_N} a \partial_n u \cdot v\ ds \\
++ \int_{\Omega} c u \cdot v\ dx
+= \int_{\Omega} f \cdot v\ dx \quad \forall v \in V\end{split}\]</div>
+<p>Note that the integrals over the boundaries <span class="math notranslate nohighlight">\(\Gamma_D\)</span> and <span class="math notranslate nohighlight">\(\Gamma_N\)</span> vanish,
+since <span class="math notranslate nohighlight">\(\partial_n u = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma_N\)</span> and, due to <span class="math notranslate nohighlight">\(v \in V\)</span>, <span class="math notranslate nohighlight">\(u = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma_D\)</span>.
+Thus we have derived the following integral problem of our problem,
+which is often referred to as the weak or variational form in the literature.</p>
+<div class="admonition-weak-form admonition">
+<p class="admonition-title">Weak form</p>
 <p>Find <span class="math notranslate nohighlight">\(u \in V\)</span> such that</p>
 <div class="math notranslate nohighlight">
 \[a(u,v) = f(v) \quad \forall v \in V\]</div>
 <p>where <span class="math notranslate nohighlight">\(a: V \times V \rightarrow \mathbb{R}\)</span> is the bilinear form defined as</p>
 <div class="math notranslate nohighlight">
-\[a(u,v) := \text{TODO}\]</div>
+\[a(u,v) := \int_{\Omega} a \nabla u \cdot \nabla v\ dx + \int_{\Omega} c u \cdot v\ dx\]</div>
 <p>and the right hand side <span class="math notranslate nohighlight">\(f: V \rightarrow \mathbb{R}\)</span> is a linear form defined as</p>
 <div class="math notranslate nohighlight">
-\[f(v) := \text{TODO}\]</div>
+\[f(v) := \int_{\Omega} f \cdot v\ dx\]</div>
+</div>
+<p>Furthermore using the fundamental lemma of calculus of variations, it can be shown that the strong and the weak form
+are equivalent. Hence it suffices to solve the weak form of the problem.</p>
+</div>
+<div class="section" id="finite-element-method">
+<h2>Finite Element Method<a class="headerlink" href="#finite-element-method" title="Permalink to this headline">¶</a></h2>
+<p>TODO !!!</p>
+</div>
+<div class="section" id="two-grid-method">
+<h2>Two Grid Method<a class="headerlink" href="#two-grid-method" title="Permalink to this headline">¶</a></h2>
 <p>TODO: Code Examples !!!!!</p>
 <div class="math notranslate nohighlight">
 \[\text{softmax}(x_i) := \frac{e^{x_i}}{\sum_{j=1}^n e^{x_j}}.\]</div>
@@ -208,16 +269,14 @@ TODO: domain <span class="math notranslate nohighlight">\(\Omega\)</span></p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Softmax</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>Activation functions can also be added to dense layers. If no activation function is
-specified, the layer uses the Sigmoid function. E.g. you can add ReLU to a dense layer via</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">layers</span> <span class="kn">import</span> <span class="n">Dense</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">activations</span> <span class="kn">import</span> <span class="n">ReLU</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">denseLayer</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">inputDim</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">outputDim</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">activation</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">())</span>
-</pre></div>
 </div>
-</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Sven Beuchler. <em>Lecture notes in ‘Multigrid and domain decomposition.’</em> April 2020.</p></li>
+<li><p>Thomas Wick. <em>Numerical Methods for Partial Differential Equations.</em> 2020, pp. 229-240. URL: <a class="reference external" href="https://doi.org/10.15488/9248">https://doi.org/10.15488/9248</a>.</p></li>
+<li><p>Dietrich Braess. <em>Finite Elemente.</em> Springer Berlin Heidelberg, 2013. DOI: 10.1007/978-3-642-34797-9. URL: <a class="reference external" href="https://doi.org/10.1007%2F978-3-642-34797-9">https://doi.org/10.1007%2F978-3-642-34797-9</a>.</p></li>
+</ol>
 </div>
 </div>
 
