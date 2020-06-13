@@ -243,6 +243,7 @@ class Grid():
         plt.title(title)
         plt.xlabel('x')
         plt.ylabel('y')
+        plt.savefig(title + ".svg", transparent = True)
         plt.show()
 
     def __str__(self):

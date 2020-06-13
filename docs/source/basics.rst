@@ -5,7 +5,7 @@ Introduction
 ^^^^^^^^^^^^
 
 In the following, we are describing the geometric multigrid method,
-which for certain problems yields an iterative solver for linear equations
+which for certain problems yields an iterative solver
 with optimal time complexity, i.e. the solver returns a solution to a PDE in
 :math:`O(n_{\text{DoFs}})` arithmetic operations. We will show that this can also
 be achieved for some convection-diffusion equations on uniformly refined triangular
@@ -88,7 +88,7 @@ which is often referred to as the weak or variational form in the literature.
 
   .. math::
 
-    a(u,v) = f(v) \quad \forall v \in V
+    a(u,v) = l(v) \quad \forall v \in V
 
   where :math:`a: V \times V \rightarrow \mathbb{R}` is the bilinear form defined as
 
@@ -96,11 +96,11 @@ which is often referred to as the weak or variational form in the literature.
 
     a(u,v) := \int_{\Omega} a \nabla u \cdot \nabla v\ dx + \int_{\Omega} c u \cdot v\ dx
 
-  and the right hand side :math:`f: V \rightarrow \mathbb{R}` is a linear form defined as
+  and the right hand side :math:`l: V \rightarrow \mathbb{R}` is a linear form defined as
 
   .. math::
 
-    f(v) := \int_{\Omega} f \cdot v\ dx
+    l(v) := \int_{\Omega} f \cdot v\ dx
 
 
 Furthermore using the fundamental lemma of calculus of variations, it can be shown that the strong and the weak form
@@ -111,22 +111,45 @@ Finite Element Method
 ^^^^^^^^^^^^^^^^^^^^^
 TODO !!!
 
+Grid Setup
+^^^^^^^^^^
+To transform the weak form of our problem into a linear equation system,
+we first need to discretize our domain. For that purpose, we create an initial triangulation of the domain,
+i.e. we divide :math:`\Omega` into a set of triangles. We call this triangulation the coarse grid and denote it as :math:`\mathbb{T}_0`.
+The grid consists of objects of type :code:`Node`, :code:`Edge` and :code:`Triangle`.
+
+.. figure:: img/CoarseGrid.svg
+    :alt: coarse_grid
+    :align: center
+
+    Figure 2: Coarse grid (:math:`\mathbb{T}_0`)
+
+For the multigrid method, we need a sequence of such grids.
+In this work, we restrict our analysis to uniformly refined meshes.
+How can we create these refined meshes? We have to loop over all triangles of the grid
+and then refine them.
+
+.. figure:: img/triangle_refinement.svg
+    :alt: triangle_refinement
+    :align: center
+
+    Figure 3: Refining a triangle
+
+To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
+As shown in figure 3, through the refinement process a triangle is being divided
+into four smaller triangles. father son list, table 
 
 Two Grid Method
 ^^^^^^^^^^^^^^^
 
 TODO: Code Examples !!!!!
 
-
-.. math::
-
-   \text{softmax}(x_i) := \frac{e^{x_i}}{\sum_{j=1}^n e^{x_j}}.
-
 ::
 
    >>> from activations import Softmax
    >>> f = Softmax()
 
+14.09.
 
 References
 ^^^^^^^^^^

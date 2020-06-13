@@ -88,6 +88,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#problem-setup">Problem setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#finite-element-method">Finite Element Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#grid-setup">Grid Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#two-grid-method">Two Grid Method</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
@@ -185,7 +186,7 @@
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>In the following, we are describing the geometric multigrid method,
-which for certain problems yields an iterative solver for linear equations
+which for certain problems yields an iterative solver
 with optimal time complexity, i.e. the solver returns a solution to a PDE in
 <span class="math notranslate nohighlight">\(O(n_{\text{DoFs}})\)</span> arithmetic operations. We will show that this can also
 be achieved for some convection-diffusion equations on uniformly refined triangular
@@ -245,13 +246,13 @@ which is often referred to as the weak or variational form in the literature.</p
 <p class="admonition-title">Weak form</p>
 <p>Find <span class="math notranslate nohighlight">\(u \in V\)</span> such that</p>
 <div class="math notranslate nohighlight">
-\[a(u,v) = f(v) \quad \forall v \in V\]</div>
+\[a(u,v) = l(v) \quad \forall v \in V\]</div>
 <p>where <span class="math notranslate nohighlight">\(a: V \times V \rightarrow \mathbb{R}\)</span> is the bilinear form defined as</p>
 <div class="math notranslate nohighlight">
 \[a(u,v) := \int_{\Omega} a \nabla u \cdot \nabla v\ dx + \int_{\Omega} c u \cdot v\ dx\]</div>
-<p>and the right hand side <span class="math notranslate nohighlight">\(f: V \rightarrow \mathbb{R}\)</span> is a linear form defined as</p>
+<p>and the right hand side <span class="math notranslate nohighlight">\(l: V \rightarrow \mathbb{R}\)</span> is a linear form defined as</p>
 <div class="math notranslate nohighlight">
-\[f(v) := \int_{\Omega} f \cdot v\ dx\]</div>
+\[l(v) := \int_{\Omega} f \cdot v\ dx\]</div>
 </div>
 <p>Furthermore using the fundamental lemma of calculus of variations, it can be shown that the strong and the weak form
 are equivalent. Hence it suffices to solve the weak form of the problem.</p>
@@ -260,11 +261,29 @@ are equivalent. Hence it suffices to solve the weak form of the problem.</p>
 <h2>Finite Element Method<a class="headerlink" href="#finite-element-method" title="Permalink to this headline">¶</a></h2>
 <p>TODO !!!</p>
 </div>
+<div class="section" id="grid-setup">
+<h2>Grid Setup<a class="headerlink" href="#grid-setup" title="Permalink to this headline">¶</a></h2>
+<p>To transform the weak form of our problem into a linear equation system,
+we first need to discretize our domain. For that purpose, we create an initial triangulation of the domain,
+i.e. we divide <span class="math notranslate nohighlight">\(\Omega\)</span> into a set of triangles. We call this triangulation the coarse grid and denote it as <span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>.
+The grid consists of objects of type <code class="code docutils literal notranslate"><span class="pre">Node</span></code>, <code class="code docutils literal notranslate"><span class="pre">Edge</span></code> and <code class="code docutils literal notranslate"><span class="pre">Triangle</span></code>.</p>
+<div class="figure align-center" id="id2">
+<img alt="coarse_grid" src="_images/CoarseGrid.svg" /><p class="caption"><span class="caption-text">Figure 2: Coarse grid (<span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>)</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>For the multigrid method, we need a sequence of such grids.
+In this work, we restrict our analysis to uniformly refined meshes.
+How can we create these refined meshes? We have to loop over all triangles of the grid
+and then refine them.</p>
+<div class="figure align-center" id="id3">
+<img alt="triangle_refinement" src="_images/triangle_refinement.svg" /><p class="caption"><span class="caption-text">Figure 3: Refining a triangle</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p>To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
+As shown in figure 3, through the refinement process a triangle is being divided
+into four smaller triangles.</p>
+</div>
 <div class="section" id="two-grid-method">
 <h2>Two Grid Method<a class="headerlink" href="#two-grid-method" title="Permalink to this headline">¶</a></h2>
 <p>TODO: Code Examples !!!!!</p>
-<div class="math notranslate nohighlight">
-\[\text{softmax}(x_i) := \frac{e^{x_i}}{\sum_{j=1}^n e^{x_j}}.\]</div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">activations</span> <span class="kn">import</span> <span class="n">Softmax</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Softmax</span><span class="p">()</span>
 </pre></div>
