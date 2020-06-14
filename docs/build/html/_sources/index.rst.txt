@@ -6,6 +6,7 @@
 Welcome to Multigrid's documentation!
 =====================================
 TODO: problem description
+
 TODO: installation
 
 .. toctree::
@@ -14,6 +15,8 @@ TODO: installation
 
    basics
    results
+   license
+   help
 
 
 Indices and tables

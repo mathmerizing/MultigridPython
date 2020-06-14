@@ -3,26 +3,20 @@ Basics of Geometric Multigrid
 
 .. raw:: html
 
-    <style> .red {color:#ff0000;} </style>
-
-.. role:: red
-
-.. raw:: html
-
-    <style> .purple {color:#8600b3;} </style>
-
-.. role:: purple
-
-.. raw:: html
-
-    <style> .blue {color:#1980e6;} </style>
+    <style> .blue {color:#3636eb;} </style>
 
 .. role:: blue
+
+.. raw:: html
+
+    <style> .red {color:#cc0000;} </style>
+
+.. role:: red
 
 
 Introduction
 ^^^^^^^^^^^^
-:red:`In the following`, :purple:`we are describing` :blue:`the geometric multigrid method`,
+In the following, we are describing the :blue:`geometric multigrid method`,
 which for certain problems yields an iterative solver
 with optimal time complexity, i.e. the solver returns a solution to a PDE in
 :math:`O(n_{\text{DoFs}})` arithmetic operations. We will show that this can also
@@ -31,10 +25,10 @@ meshes, when discretizing with linear finite elements.
 
 Problem setup
 ^^^^^^^^^^^^^
-Let :math:`\Omega := (-1,1)^2 \setminus (0,1)^2` be an L-shaped domain. We decompose the boundary of this domain :math:`\partial\Omega` into the Neumann boundary :math:`\Gamma_N := (0,1) \times \{0\} \cup \{0\} \times (0,1)`
+Let :math:`\Omega := (-1,1)^2 \setminus (0,1)^2` be an L-shaped :blue:`domain`. We decompose the boundary of this domain :math:`\partial\Omega` into the Neumann boundary :math:`\Gamma_N := (0,1) \times \{0\} \cup \{0\} \times (0,1)`
 and the Dirichlet boundary :math:`\Gamma_D := \partial\Omega \setminus \Gamma_N`.
 
-Next, we define the ansatz and test function space :math:`V := \left\{ u \in H^1(\Omega)\mid u = 0 \text{ on } \Gamma_D \right\}`,
+Next, we define the :blue:`ansatz` and :blue:`test function space` :math:`V := \left\{ u \in H^1(\Omega)\mid u = 0 \text{ on } \Gamma_D \right\}`,
 where
 
 .. math::
@@ -60,7 +54,7 @@ Further, we need a right hand side function
     :alt: domain
     :align: center
 
-    Figure 1: Domain :math:`\Omega`
+.. centered:: Figure 1: Domain :math:`\Omega`
 
 Using the parameters :math:`a = 1` and :math:`c = 0` in :math:`\Omega`, we can now
 formulate the strong form of our convection diffusion equation:
@@ -139,14 +133,14 @@ Grid Setup
 ^^^^^^^^^^
 To transform the weak form of our problem into a linear equation system,
 we first need to discretize our domain. For that purpose, we create an initial triangulation of the domain,
-i.e. we divide :math:`\Omega` into a set of triangles. We call this triangulation the coarse grid and denote it as :math:`\mathbb{T}_0`.
+i.e. we divide :math:`\Omega` into a set of triangles. We call this triangulation the :blue:`coarse grid` and denote it as :math:`\mathbb{T}_0`.
 The grid consists of objects of type :code:`Node`, :code:`Edge` and :code:`Triangle`.
 
 .. figure:: img/CoarseGrid.svg
     :alt: coarse_grid
     :align: center
 
-    Figure 2: Coarse grid (:math:`\mathbb{T}_0`)
+.. centered:: Figure 2: Coarse grid (:math:`\mathbb{T}_0`)
 
 For the multigrid method, we need a sequence of such grids.
 In this work, we restrict our analysis to uniformly refined meshes.
@@ -157,7 +151,7 @@ and then refine them.
     :alt: triangle_refinement
     :align: center
 
-    Figure 3: Refining a triangle
+.. centered:: Figure 3: Refining a triangle
 
 To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
 As shown in figure 3, through the refinement process a triangle is being divided
@@ -167,14 +161,14 @@ In the literature [1] these relationships are being stored in a father-son list.
 This is not needed in our case, due to Object Oriented Programming (OOP).
 
 Having refined all triangles of the coarse grid, we get a new triangulation :math:`\mathbb{T}_1`,
-which is called the grid on level 1. The level of a grid indicates, how often we need to (globally)
+which is called the grid on level 1. The :blue:`level` of a grid indicates how often we need to (globally)
 refine the coarse grid to construct that grid.
 
 .. figure:: img/GridLevel1.svg
     :alt: grid_level_1
     :align: center
 
-    Figure 4: Grid on level 1 (:math:`\mathbb{T}_1`)
+.. centered:: Figure 4: Grid on level 1 (:math:`\mathbb{T}_1`)
 
 We continue the process of refining the grid, until we end up with a grid, which has enough nodes
 to ensure that a sufficiently good approximation to the exact solution can be computed.
@@ -183,7 +177,7 @@ to ensure that a sufficiently good approximation to the exact solution can be co
     :alt: grid_level_2
     :align: center
 
-    Figure 5: Grid on level 2 (:math:`\mathbb{T}_2`)
+.. centered:: Figure 5: Grid on level 2 (:math:`\mathbb{T}_2`)
 
 The grid on the highest level, in this case :math:`\mathbb{T}_2` or more generally :math:`\mathbb{T}_L`, is called the finest grid
 and will be used to assemble the system matrix.
@@ -271,7 +265,7 @@ Multigrid algorithm
     \\
     &\qquad\text{return }x_l^{k+1} := x_l^{k,3}
 
-The parameter :math:`\mu \in \mathbb{N}^+` determines the cycle of the multigrid iteration.
+The parameter :math:`\mu \in \mathbb{N}^+` determines the :blue:`cycle` of the multigrid iteration.
 For :math:`\mu = 1` we get the V-cycle
 
 .. tikz::
@@ -363,20 +357,117 @@ and for :math:`\mu = 2` we get the W-cycle.
 
 .. centered:: Figure 7: W-cycle
 
-In the figures of these schemes, white circles stand for :math:`\nu` steps of an iterative solver, 
+In the figures of these schemes, white circles stand for :math:`\nu` steps of an iterative solver,
 black circles represent a direct solver, blue arrows illustrate a restriction and green arrows illustrate a prolongation.
 
 Grid transfer
 ^^^^^^^^^^^^^
-TODO
+As we have seen in the previous sections, the multigrid algorithm requires the ability to
+prolongate vectors from :math:`\mathbb{R}^{n_{l}}` to :math:`\mathbb{R}^{n_{l-1}}`.
+We will only show how the grid transfer operations work for conforming finite elements.
+For information on how to deal with non-conforming finite element spaces, please refer to [3].
+Let :math:`\left\{\varphi_1^l, \dots, \varphi_{n_{l}}^l\right\}` and
+:math:`\left\{\varphi_1^{l-1}, \dots, \varphi_{n_{l-1}}^{l-1}\right\}` be some given bases of
+:math:`V^l` and :math:`V^{l-1}`.
+Due to the conformity of the finite element spaces,
+:math:`V^{l-1} \subset V^l` holds and there exists a matrix :math:`I^{l-1}_l \in \mathbb{R}^{n_{-1} \times n_l}`
+such that
 
-TODO: Code Examples !!!!!
+.. math::
 
-::
+  \begin{pmatrix}
+  \varphi_1^{l-1} \\
+  \vdots \\
+  \varphi_{n_{l-1}}^{l-1}
+  \end{pmatrix} = I^{l-1}_l
+  \begin{pmatrix}
+  \varphi_1^{l} \\
+  \vdots \\
+  \varphi_{n_{l}}^{l}
+  \end{pmatrix}.
 
-   >>> from activations import Softmax
-   >>> f = Softmax()
+The matrix :math:`I^{l-1}_l` is called the :blue:`restriction matrix` and its transpose :math:`I^{l}_{l-1} = \left(I^{l-1}_l\right)^T` is called the :blue:`prolongation matrix.`
+These matrices are dependent on the finite elements that are being used and on the way that the grids have been refined.
+They have only very few non-zero entries and thus are stored as sparse matrices.
+Furthermore, they also have a significant impact on the rate of convergence of the multigrid algorithm [3]].
+Additionally, for linear partial differential equations the identity
 
+.. math::
+
+  A_{l-1} = I^{l}_{l-1} A_l I^{l-1}_l
+
+is fulfilled. Before taking a look at the actual implementation in our code,
+it is helpful to a see how the the grid transfer works for one dimensional linear finite elements.
+
+.. admonition:: Grid transfer in 1D
+
+  .. figure:: img/grid_transfer.png
+      :alt: grid_transfer
+      :align: center
+
+  .. centered:: Figure 8: Basis functions on the first two levels
+
+  It holds
+
+  .. math::
+
+    \varphi_1^0 &= \varphi_1^1 + \frac{1}{2}\varphi_3^1, \\
+    \varphi_2^0 &= \varphi_2^1 + \frac{1}{2}\varphi_3^1.
+
+  Consequently the restriction matrix reads
+
+  .. math::
+
+    I_1^0 =
+    \begin{bmatrix}
+    1 & & \frac{1}{2} \\
+    & 1 & \frac{1}{2}
+    \end{bmatrix}.
+
+We decided to follow these rules to create the interpolation matrix :math:`I_{l-1}^l`:
+
+* if the i.th node already exists on level :math:`{l-1}`, then :math:`\left(I_{l-1}^l\right)_{i,i} = 1`
+* else get the indices of the parents of the i.th node, then :math:`\left(I_{l-1}^l\right)_{i,\text{parent}_1} = \frac{1}{2}` and :math:`\left(I_{l-1}^l\right)_{i,\text{parent}_2} = \frac{1}{2}`
+
+The rest of this matrix is filled with zeros. Doing this for :math:`{l=1}` yields the prolongation matrix
+
+.. math::
+
+  I_0^1 =
+  \begin{bmatrix}
+  1 & & & & & & &  \\
+  & 1 & & & & & &  \\
+  & & 1 & & & & &  \\
+  & & & 1 & & & &  \\
+  & & & & 1 & & &  \\
+  & & & & & 1 & &  \\
+  & & & & & & 1 &  \\
+  & & & & & & & 1  \\
+  \frac{1}{2}&\frac{1}{2} & & & & & &  \\
+  & \frac{1}{2}&\frac{1}{2} & & & & &  \\
+  \frac{1}{2}& & &\frac{1}{2} & & & & \\
+  & \frac{1}{2}& & & \frac{1}{2}& & & \\
+  & & &\frac{1}{2} &\frac{1}{2} & & & \\
+  & &\frac{1}{2} & & &\frac{1}{2} & & \\
+  & & & &\frac{1}{2} &\frac{1}{2} & & \\
+  & & & \frac{1}{2}& & & \frac{1}{2}&  \\
+  & & & & \frac{1}{2}& & & \frac{1}{2}\\
+  & & & & & & \frac{1}{2}& \frac{1}{2}\\
+  \frac{1}{2}& & & &\frac{1}{2} & & & \\
+  & & &\frac{1}{2} & & & & \frac{1}{2} \\
+  &\frac{1}{2} & & & & \frac{1}{2}& &  \\
+  \end{bmatrix}.
+
+For our kind of prolongation matrix, the restriction matrix is given by
+
+.. math::
+
+  I_l^{l-1} = \frac{1}{4}\left( I_{l-1}^l \right)^T.
+
+At this point, we should also mention how the boundary conditions can be applied
+in the multigrid algorithm. The start vector of this method should be the zero vector on which the Dirichlet boundary conditions should be applied.
+Note that Dirichlet boundary conditions need to be applied to the output vectors of the prolongation and restriction,
+but here :red:`all Dirichlet boundary conditions are set to be homogeneous`.
 
 References
 ^^^^^^^^^^
@@ -384,3 +475,4 @@ References
 #. Thomas Wick. *Numerical Methods for Partial Differential Equations.* 2020. URL: `https://doi.org/10.15488/9248 <https://doi.org/10.15488/9248>`__.
 #. Dietrich Braess. *Finite Elemente.* Springer Berlin Heidelberg, 2013. DOI: 10.1007/978-3-642-34797-9. URL: `https://doi.org/10.1007%2F978-3-642-34797-9 <https://doi.org/10.1007%2F978-3-642-34797-9>`__.
 #. Chao Chen. "Geometric multigrid for eddy current problems". PhD thesis. 2012.
+#. Julian Roth. "Geometric Multigrid Methods for Maxwell's Equations". Bachelor thesis. 2020.
