@@ -89,6 +89,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#problem-setup">Problem setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#finite-element-method">Finite Element Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#iterative-methods">Iterative Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#grid-setup">Grid Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#two-grid-algorithm">Two-grid algorithm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#multigrid-algorithm">Multigrid algorithm</a></li>
@@ -187,9 +188,9 @@
 </style>
 <div class="section" id="basics-of-geometric-multigrid">
 <h1>Basics of Geometric Multigrid<a class="headerlink" href="#basics-of-geometric-multigrid" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="introduction">
+<style> .red {color:#ff0000;} </style><style> .purple {color:#8600b3;} </style><style> .blue {color:#1980e6;} </style><div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>In the following, we are describing the geometric multigrid method,
+<p><span class="red">In the following</span>, <span class="purple">we are describing</span> <span class="blue">the geometric multigrid method</span>,
 which for certain problems yields an iterative solver
 with optimal time complexity, i.e. the solver returns a solution to a PDE in
 <span class="math notranslate nohighlight">\(O(n_{\text{DoFs}})\)</span> arithmetic operations. We will show that this can also
@@ -265,6 +266,10 @@ are equivalent. Hence it suffices to solve the weak form of the problem.</p>
 <h2>Finite Element Method<a class="headerlink" href="#finite-element-method" title="Permalink to this headline">¶</a></h2>
 <p>TODO !!!</p>
 </div>
+<div class="section" id="iterative-methods">
+<h2>Iterative Methods<a class="headerlink" href="#iterative-methods" title="Permalink to this headline">¶</a></h2>
+<p>TODO !!!</p>
+</div>
 <div class="section" id="grid-setup">
 <h2>Grid Setup<a class="headerlink" href="#grid-setup" title="Permalink to this headline">¶</a></h2>
 <p>To transform the weak form of our problem into a linear equation system,
@@ -285,7 +290,7 @@ and then refine them.</p>
 As shown in figure 3, through the refinement process a triangle is being divided
 into four smaller triangles. Each <code class="code docutils literal notranslate"><span class="pre">Node</span></code> object needs to know its parent nodes.
 The parents are two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
-In the literature [1] these relationships are being stored in a father son list.
+In the literature [1] these relationships are being stored in a father-son list.
 This is not needed in our case, due to Object Oriented Programming (OOP).</p>
 <p>Having refined all triangles of the coarse grid, we get a new triangulation <span class="math notranslate nohighlight">\(\mathbb{T}_1\)</span>,
 which is called the grid on level 1. The level of a grid indicates, how often we need to (globally)
@@ -324,10 +329,10 @@ Let the k-th iterate <span class="math notranslate nohighlight">\(x_h^k\)</span>
 &amp;\qquad x_h^{k,1} = S_1^{\nu_1}x_h^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
 \\
 &amp;\qquad\text{# 2. Restrict defect to coarse grid.}\\
-&amp;\qquad d_{2h}^{k} = I_h^{2h}(b_{h} - A_h x_{h}^{k,1}) \qquad{\scriptsize\textit{# }I_h^{2h}\textit{ := restriction operator}} \\
+&amp;\qquad d_{2h} = I_h^{2h}(b_{h} - A_h x_{h}^{k,1}) \qquad{\scriptsize\textit{# }I_h^{2h}\textit{ := restriction operator}} \\
 \\
 &amp;\qquad\text{# 3. Coarse grid correction.}\\
-&amp;\qquad x_{h}^{k,2} = x_{h}^{k,1} + I_{2h}^{h}(A_{2h}^{-1}d_{2h}^{k}) \qquad{\scriptsize\textit{# }I_{2h}^h\textit{ := prolongation operator}} \\
+&amp;\qquad x_{h}^{k,2} = x_{h}^{k,1} + I_{2h}^{h}(A_{2h}^{-1}d_{2h}) \qquad{\scriptsize\textit{# }I_{2h}^h\textit{ := prolongation operator}} \\
 \\
 &amp;\qquad\text{# 4. Apply } \nu_2 \text{ smoothing steps of an iterative method }S_2. \\
 &amp;\qquad x_{h}^{k,3} = S_2^{\nu_2}x_h^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
@@ -347,7 +352,120 @@ Thus <span class="math notranslate nohighlight">\(A_{2h}^{-1}d_{2h}\)</span> can
 </div>
 <div class="section" id="multigrid-algorithm">
 <h2>Multigrid algorithm<a class="headerlink" href="#multigrid-algorithm" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<div class="admonition-multigrid-algorithm admonition">
+<p class="admonition-title">Multigrid algorithm</p>
+<p>Let <span class="math notranslate nohighlight">\(A_L x_L = b_L\)</span> denote the problem on the finest grid and <span class="math notranslate nohighlight">\(A_l x_l = b_l\)</span>
+the problems on the coarser grids for <span class="math notranslate nohighlight">\(0 \leq l \leq L-1\)</span>.
+Let <span class="math notranslate nohighlight">\(\nu\)</span> denote the number of pre- and post-smoothing steps.
+Let the k-th iterate <span class="math notranslate nohighlight">\(x_l^k\)</span> on the l-th level be given.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;\text{def MGM(}l,x_l^k,b_l\text{):} \\
+&amp;\qquad\text{# 1. Apply } \nu \text{ smoothing steps of an iterative method }S. \\
+&amp;\qquad x_l^{k,1} = S^{\nu}x_l^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
+\\
+&amp;\qquad\text{# 2. Restrict defect to coarse grid.}\\
+&amp;\qquad d_{l-1} = I_l^{l-1}(b_{l} - A_l x_{l}^{k,1}) \qquad{\scriptsize\textit{# }I_l^{l-1}\textit{ := restriction operator}} \\
+\\
+&amp;\qquad\text{# 3. Coarse grid solution.}\\
+&amp;\qquad \text{if l == 1:} \\
+&amp;\qquad\qquad y_0 = A_0^{-1}d_0 \qquad{\scriptsize\textit{# direct solver on coarsest grid}} \\
+&amp;\qquad \text{else:}\\
+&amp;\qquad\qquad \text{for i in range(}\mu\text{)} \\
+&amp;\qquad\qquad\qquad y_{l-1} = \text{ MGM(}l-1,y_{l-1},d_{l-1}\text{)} \\
+\\
+&amp;\qquad\text{# 4. Coarse grid correction.}\\
+&amp;\qquad x_{l}^{k,2} = x_{l}^{k,1} + I_{l-1}^{l}y_{l-1} \qquad{\scriptsize\textit{# }I_{l-1}^l\textit{ := prolongation operator}} \\
+\\
+&amp;\qquad\text{# 5. Apply } \nu \text{ smoothing steps of an iterative method }S. \\
+&amp;\qquad x_{l}^{k,3} = S^{\nu}x_l^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
+\\
+&amp;\qquad\text{return }x_l^{k+1} := x_l^{k,3}\end{split}\]</div>
+</div>
+<p>The parameter <span class="math notranslate nohighlight">\(\mu \in \mathbb{N}^+\)</span> determines the cycle of the multigrid iteration.
+For <span class="math notranslate nohighlight">\(\mu = 1\)</span> we get the V-cycle</p>
+<div class="figure">
+<p><img src="_images/tikz-bf0cb5d157710f5536fe0d52b59615e9e5f4431c.png" alt="\node (A) at (0,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (B) at (1,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (C) at (2,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (D) at (3,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+\node (E) at (4,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (F) at (5,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (G) at (6,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+
+\node [color=black] at (-1,3) {\tiny $l = 3$};
+\node [color=black] at (-1,2) {\tiny $l = 2$};
+\node [color=black] at (-1,1) {\tiny $l = 1$};
+\node [color=black] at (-1,0) {\tiny $l = 0$};
+
+{\color{blue}
+\draw[-&gt;] (A) to (B);
+\draw[-&gt;] (B) to (C);
+\draw[-&gt;] (C) to (D);
+}
+
+{\color{black!40!green}
+\draw[-&gt;] (D) to (E);
+\draw[-&gt;] (E) to (F);
+\draw[-&gt;] (F) to (G);
+}" /></p>
+</div><p class="centered">
+<strong>Figure 6: V-cycle</strong></p><p>and for <span class="math notranslate nohighlight">\(\mu = 2\)</span> we get the W-cycle.</p>
+<div class="figure">
+<p><img src="_images/tikz-362301dbc83d59069c61878e8ce3341f1b2ddb32.png" alt="\node (A) at (0,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (B) at (1,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (C) at (2,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (D) at (3,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+\node (E) at (4,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (F) at (5,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+\node (G) at (6,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (H) at (7,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (I) at (8,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (J) at (9,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+\node (K) at (10,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (L) at (11,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+\node (M) at (12,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (N) at (13,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+\node (O) at (14,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+
+\node [color=black] at (-1,3) {\scriptsize $l = 3$};
+\node [color=black] at (-1,2) {\scriptsize $l = 2$};
+\node [color=black] at (-1,1) {\scriptsize $l = 1$};
+\node [color=black] at (-1,0) {\scriptsize $l = 0$};
+
+{\color{blue}
+\draw[-&gt;] (A) to (B);
+\draw[-&gt;] (B) to (C);
+\draw[-&gt;] (C) to (D);
+}
+
+{\color{black!40!green}
+\draw[-&gt;] (D) to (E);
+}
+{\color{blue}
+\draw[-&gt;] (E) to (F);
+}
+{\color{black!40!green}
+\draw[-&gt;] (F) to (G);
+\draw[-&gt;] (G) to (H);
+}
+{\color{blue}
+\draw[-&gt;] (H) to (I);
+\draw[-&gt;] (I) to (J);
+}
+{\color{black!40!green}
+\draw[-&gt;] (J) to (K);
+}
+{\color{blue}
+\draw[-&gt;] (K) to (L);
+}
+{\color{black!40!green}
+\draw[-&gt;] (L) to (M);
+\draw[-&gt;] (M) to (N);
+\draw[-&gt;] (N) to (O);
+}" /></p>
+</div><p class="centered">
+<strong>Figure 7: W-cycle</strong></p><p>In the figures of these schemes, white circles stand for <span class="math notranslate nohighlight">\(\nu\)</span> steps of an iterative solver,
+black circles represent a direct solver, blue arrows illustrate a restriction and green arrows illustrate a prolongation.</p>
 </div>
 <div class="section" id="grid-transfer">
 <h2>Grid transfer<a class="headerlink" href="#grid-transfer" title="Permalink to this headline">¶</a></h2>

@@ -1,10 +1,28 @@
 Basics of Geometric Multigrid
 =============================
 
+.. raw:: html
+
+    <style> .red {color:#ff0000;} </style>
+
+.. role:: red
+
+.. raw:: html
+
+    <style> .purple {color:#8600b3;} </style>
+
+.. role:: purple
+
+.. raw:: html
+
+    <style> .blue {color:#1980e6;} </style>
+
+.. role:: blue
+
+
 Introduction
 ^^^^^^^^^^^^
-
-In the following, we are describing the geometric multigrid method,
+:red:`In the following`, :purple:`we are describing` :blue:`the geometric multigrid method`,
 which for certain problems yields an iterative solver
 with optimal time complexity, i.e. the solver returns a solution to a PDE in
 :math:`O(n_{\text{DoFs}})` arithmetic operations. We will show that this can also
@@ -111,6 +129,12 @@ Finite Element Method
 ^^^^^^^^^^^^^^^^^^^^^
 TODO !!!
 
+
+Iterative Methods
+^^^^^^^^^^^^^^^^^
+TODO !!!
+
+
 Grid Setup
 ^^^^^^^^^^
 To transform the weak form of our problem into a linear equation system,
@@ -139,7 +163,7 @@ To refine a triangle one simply needs to bisect all of its edges and draw a new 
 As shown in figure 3, through the refinement process a triangle is being divided
 into four smaller triangles. Each :code:`Node` object needs to know its parent nodes.
 The parents are two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
-In the literature [1] these relationships are being stored in a father son list.
+In the literature [1] these relationships are being stored in a father-son list.
 This is not needed in our case, due to Object Oriented Programming (OOP).
 
 Having refined all triangles of the coarse grid, we get a new triangulation :math:`\mathbb{T}_1`,
@@ -194,10 +218,10 @@ The mulitgrid algorithm is then only a recursive application of the two grid ver
     &\qquad x_h^{k,1} = S_1^{\nu_1}x_h^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
     \\
     &\qquad\text{# 2. Restrict defect to coarse grid.}\\
-    &\qquad d_{2h}^{k} = I_h^{2h}(b_{h} - A_h x_{h}^{k,1}) \qquad{\scriptsize\textit{# }I_h^{2h}\textit{ := restriction operator}} \\
+    &\qquad d_{2h} = I_h^{2h}(b_{h} - A_h x_{h}^{k,1}) \qquad{\scriptsize\textit{# }I_h^{2h}\textit{ := restriction operator}} \\
     \\
     &\qquad\text{# 3. Coarse grid correction.}\\
-    &\qquad x_{h}^{k,2} = x_{h}^{k,1} + I_{2h}^{h}(A_{2h}^{-1}d_{2h}^{k}) \qquad{\scriptsize\textit{# }I_{2h}^h\textit{ := prolongation operator}} \\
+    &\qquad x_{h}^{k,2} = x_{h}^{k,1} + I_{2h}^{h}(A_{2h}^{-1}d_{2h}) \qquad{\scriptsize\textit{# }I_{2h}^h\textit{ := prolongation operator}} \\
     \\
     &\qquad\text{# 4. Apply } \nu_2 \text{ smoothing steps of an iterative method }S_2. \\
     &\qquad x_{h}^{k,3} = S_2^{\nu_2}x_h^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
@@ -216,7 +240,131 @@ The mulitgrid algorithm is then only a recursive application of the two grid ver
 
 Multigrid algorithm
 ^^^^^^^^^^^^^^^^^^^
-TODO
+.. admonition:: Multigrid algorithm
+
+  Let :math:`A_L x_L = b_L` denote the problem on the finest grid and :math:`A_l x_l = b_l`
+  the problems on the coarser grids for :math:`0 \leq l \leq L-1`.
+  Let :math:`\nu` denote the number of pre- and post-smoothing steps.
+  Let the k-th iterate :math:`x_l^k` on the l-th level be given.
+
+  .. math::
+
+    &\text{def MGM(}l,x_l^k,b_l\text{):} \\
+    &\qquad\text{# 1. Apply } \nu \text{ smoothing steps of an iterative method }S. \\
+    &\qquad x_l^{k,1} = S^{\nu}x_l^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
+    \\
+    &\qquad\text{# 2. Restrict defect to coarse grid.}\\
+    &\qquad d_{l-1} = I_l^{l-1}(b_{l} - A_l x_{l}^{k,1}) \qquad{\scriptsize\textit{# }I_l^{l-1}\textit{ := restriction operator}} \\
+    \\
+    &\qquad\text{# 3. Coarse grid solution.}\\
+    &\qquad \text{if l == 1:} \\
+    &\qquad\qquad y_0 = A_0^{-1}d_0 \qquad{\scriptsize\textit{# direct solver on coarsest grid}} \\
+    &\qquad \text{else:}\\
+    &\qquad\qquad \text{for i in range(}\mu\text{)} \\
+    &\qquad\qquad\qquad y_{l-1} = \text{ MGM(}l-1,y_{l-1},d_{l-1}\text{)} \\
+    \\
+    &\qquad\text{# 4. Coarse grid correction.}\\
+    &\qquad x_{l}^{k,2} = x_{l}^{k,1} + I_{l-1}^{l}y_{l-1} \qquad{\scriptsize\textit{# }I_{l-1}^l\textit{ := prolongation operator}} \\
+    \\
+    &\qquad\text{# 5. Apply } \nu \text{ smoothing steps of an iterative method }S. \\
+    &\qquad x_{l}^{k,3} = S^{\nu}x_l^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
+    \\
+    &\qquad\text{return }x_l^{k+1} := x_l^{k,3}
+
+The parameter :math:`\mu \in \mathbb{N}^+` determines the cycle of the multigrid iteration.
+For :math:`\mu = 1` we get the V-cycle
+
+.. tikz::
+
+   \node (A) at (0,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (B) at (1,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (C) at (2,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (D) at (3,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+   \node (E) at (4,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (F) at (5,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (G) at (6,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+
+   \node [color=black] at (-1,3) {\tiny $l = 3$};
+   \node [color=black] at (-1,2) {\tiny $l = 2$};
+   \node [color=black] at (-1,1) {\tiny $l = 1$};
+   \node [color=black] at (-1,0) {\tiny $l = 0$};
+
+   {\color{blue}
+   \draw[->] (A) to (B);
+   \draw[->] (B) to (C);
+   \draw[->] (C) to (D);
+   }
+
+   {\color{black!40!green}
+   \draw[->] (D) to (E);
+   \draw[->] (E) to (F);
+   \draw[->] (F) to (G);
+   }
+
+
+.. centered:: Figure 6: V-cycle
+
+and for :math:`\mu = 2` we get the W-cycle.
+
+.. tikz::
+
+   \node (A) at (0,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (B) at (1,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (C) at (2,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (D) at (3,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+   \node (E) at (4,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (F) at (5,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+   \node (G) at (6,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (H) at (7,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (I) at (8,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (J) at (9,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+   \node (K) at (10,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (L) at (11,0) [circle, minimum size=2mm, inner sep=0pt,fill = black, draw] {};
+   \node (M) at (12,1) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (N) at (13,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+   \node (O) at (14,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
+
+   \node [color=black] at (-1,3) {\scriptsize $l = 3$};
+   \node [color=black] at (-1,2) {\scriptsize $l = 2$};
+   \node [color=black] at (-1,1) {\scriptsize $l = 1$};
+   \node [color=black] at (-1,0) {\scriptsize $l = 0$};
+
+   {\color{blue}
+   \draw[->] (A) to (B);
+   \draw[->] (B) to (C);
+   \draw[->] (C) to (D);
+   }
+
+   {\color{black!40!green}
+   \draw[->] (D) to (E);
+   }
+   {\color{blue}
+   \draw[->] (E) to (F);
+   }
+   {\color{black!40!green}
+   \draw[->] (F) to (G);
+   \draw[->] (G) to (H);
+   }
+   {\color{blue}
+   \draw[->] (H) to (I);
+   \draw[->] (I) to (J);
+   }
+   {\color{black!40!green}
+   \draw[->] (J) to (K);
+   }
+   {\color{blue}
+   \draw[->] (K) to (L);
+   }
+   {\color{black!40!green}
+   \draw[->] (L) to (M);
+   \draw[->] (M) to (N);
+   \draw[->] (N) to (O);
+   }
+
+.. centered:: Figure 7: W-cycle
+
+In the figures of these schemes, white circles stand for :math:`\nu` steps of an iterative solver, 
+black circles represent a direct solver, blue arrows illustrate a restriction and green arrows illustrate a prolongation.
 
 Grid transfer
 ^^^^^^^^^^^^^

@@ -35,8 +35,10 @@ release = '1.0.0'
 extensions = [
 "sphinx_rtd_theme",
  "sphinx.ext.mathjax",
+'sphinxcontrib.tikz',
  "nbsphinx"
 ]
+latex_preamble=r'\usepackage{xcolor}'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
