@@ -111,7 +111,7 @@ def runDemo():
         startTime = millis()
 
         logging.info( "+-----------------------------------------+")
-        logging.info(f"+    MULITGRID (LEVELS = {lvlToStr(numLvl)})              +")
+        logging.info(f"+    MULTIGRID (LEVELS = {lvlToStr(numLvl)})              +")
         logging.info( "+-----------------------------------------+")
 
         mg.addLevel(showGrids = parameters["SHOW_GRIDS"])

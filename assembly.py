@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.sparse import dok_matrix
+from scipy.sparse import dok_matrix, csr_matrix
 from grid import BoundaryCondition
 
 def getLocalMatrices(degree = 1):
@@ -89,38 +89,61 @@ def assembleSystem(grid, K, M):
     Assemble system matrix and right hand side with the help of the local matrices
     and the information stored in the grid.
     """
+    global processChunk
+    import multiprocessing as mp
+    # source (parallelization): https://datascience.blog.wzb.eu/2018/02/02/vectorization-and-parallelization-in-python-with-numpy-and-pandas/
+    numCpu = mp.cpu_count()
+    chunks = np.array_split(range(len(grid.triangles)), numCpu)
+
     numDofs = len(grid.dofs)
-    systemMatrix    = dok_matrix((numDofs,numDofs), dtype=np.float32)
+    systemMatrix    = csr_matrix((numDofs,numDofs), dtype=np.float32)
     systemRightHand = np.zeros(numDofs, dtype=np.float32)
 
-    for triangle in grid.triangles:
-        # get all important triangle/ material parameters
-        detJ, G = triangle.jacobi()
-        # note: G = J^{-1} * J^{-T}
-        a       = triangle.material.get("a")
-        c       = triangle.material.get("c")
-        f       = triangle.material.get("f")
-        numLocalDofs = len(triangle.dofs)
+    #for triangle in grid.triangles:
+    def processChunk(chunk):
+        numDofs = len(grid.dofs)
+        systemMatrixProc    = dok_matrix((numDofs,numDofs), dtype=np.float32)
+        systemRightHandProc = np.zeros(numDofs, dtype=np.float32)
 
-        # assemble cell matrix and cell right hand side
-        cellMatrix    = np.zeros((numLocalDofs, numLocalDofs), dtype=np.float32)
-        cellRightHand = np.zeros(numLocalDofs, dtype=np.float32)
+        for i in chunk:
+            triangle = grid.triangles[i]
+            # get all important triangle/ material parameters
+            detJ, G = triangle.jacobi()
+            # note: G = J^{-1} * J^{-T}
+            a       = triangle.material.get("a")
+            c       = triangle.material.get("c")
+            f       = triangle.material.get("f")
+            numLocalDofs = len(triangle.dofs)
 
-        # compute cellMatrix
-        diffusionMatrix = a * (G[0,0]*K[0] + G[0,1]*K[1] + G[1,0]*K[1].T + G[1,1]*K[2])
-        reactionMatrix  = c * M * detJ
-        cellMatrix = diffusionMatrix + reactionMatrix
+            # assemble cell matrix and cell right hand side
+            cellMatrix    = np.zeros((numLocalDofs, numLocalDofs), dtype=np.float32)
+            cellRightHand = np.zeros(numLocalDofs, dtype=np.float32)
 
-        # compute cellRightHand
-        cellRightHand = f * detJ * np.sum(M, axis = 1)
+            # compute cellMatrix
+            diffusionMatrix = a * (G[0,0]*K[0] + G[0,1]*K[1] + G[1,0]*K[1].T + G[1,1]*K[2])
+            reactionMatrix  = c * M * detJ
+            cellMatrix = diffusionMatrix + reactionMatrix
 
-        # write local to global matrix
-        for i, firstDof in enumerate(triangle.dofs):
-            systemRightHand[firstDof.ind] += cellRightHand[i]
-            for j, secondDof in enumerate(triangle.dofs):
-                systemMatrix[firstDof.ind, secondDof.ind] += cellMatrix[i,j]
+            # compute cellRightHand
+            cellRightHand = f * detJ * np.sum(M, axis = 1)
 
-    return systemMatrix.tocsr(), systemRightHand
+            # write local to global matrix
+            for i, firstDof in enumerate(triangle.dofs):
+                systemRightHandProc[firstDof.ind] += cellRightHand[i]
+                for j, secondDof in enumerate(triangle.dofs):
+                    systemMatrixProc[firstDof.ind, secondDof.ind] += cellMatrix[i,j]
+
+        return systemMatrixProc.tocsr(), systemRightHandProc
+
+    with mp.Pool(processes = numCpu) as pool:
+        procResults = [pool.apply_async(processChunk, args=(chunk,)) for chunk in chunks]
+        resultChunks = [r.get() for r in procResults]
+
+    for matrix, rhs in resultChunks:
+        systemMatrix += matrix
+        systemRightHand += rhs
+
+    return systemMatrix, systemRightHand
 
 def applyBoundaryCondition(grid,matrix = None,vector = None,homogenize = False):
     """
