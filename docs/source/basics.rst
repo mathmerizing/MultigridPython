@@ -198,6 +198,7 @@ Two-grid algorithm
 To understand the multigrid algorithm we start by looking at the case where we only have two grids :math:`\mathbb{T}_{l}` and :math:`\mathbb{T}_{l+1}`.
 The mulitgrid algorithm is then only a recursive application of the two grid version.
 
+
 .. admonition:: Two-grid algorithm
 
   Let :math:`A_h x_h = b_h` and :math:`A_{2h} x_{2h} = b_{2h}` with :math:`A_h \in \mathbb{R}^{n \times n}`,
@@ -205,22 +206,9 @@ The mulitgrid algorithm is then only a recursive application of the two grid ver
   denote the linear equation systems from the grids :math:`\mathbb{T}_{l+1}` and :math:`\mathbb{T}_{l}`.
   Let the k-th iterate :math:`x_h^k` on the finer grid be given.
 
-  .. math::
-
-    &\text{def TGM(}x_h^k\text{):} \\
-    &\qquad\text{# 1. Apply } \nu_1 \text{ smoothing steps of an iterative method }S_1. \\
-    &\qquad x_h^{k,1} = S_1^{\nu_1}x_h^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
-    \\
-    &\qquad\text{# 2. Restrict defect to coarse grid.}\\
-    &\qquad d_{2h} = I_h^{2h}(b_{h} - A_h x_{h}^{k,1}) \qquad{\scriptsize\textit{# }I_h^{2h}\textit{ := restriction operator}} \\
-    \\
-    &\qquad\text{# 3. Coarse grid correction.}\\
-    &\qquad x_{h}^{k,2} = x_{h}^{k,1} + I_{2h}^{h}(A_{2h}^{-1}d_{2h}) \qquad{\scriptsize\textit{# }I_{2h}^h\textit{ := prolongation operator}} \\
-    \\
-    &\qquad\text{# 4. Apply } \nu_2 \text{ smoothing steps of an iterative method }S_2. \\
-    &\qquad x_{h}^{k,3} = S_2^{\nu_2}x_h^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
-    \\
-    &\qquad\text{return }x_h^{k+1} := x_h^{k,3}
+  .. figure:: img/tgm_trans.png
+      :alt: tgm
+      :align: center
 
 .. hint::
 
@@ -241,29 +229,9 @@ Multigrid algorithm
   Let :math:`\nu` denote the number of pre- and post-smoothing steps.
   Let the k-th iterate :math:`x_l^k` on the l-th level be given.
 
-  .. math::
-
-    &\text{def MGM(}l,x_l^k,b_l\text{):} \\
-    &\qquad\text{# 1. Apply } \nu \text{ smoothing steps of an iterative method }S. \\
-    &\qquad x_l^{k,1} = S^{\nu}x_l^{k} \qquad{\scriptsize\textit{# PRE - SMOOTHING}} \\
-    \\
-    &\qquad\text{# 2. Restrict defect to coarse grid.}\\
-    &\qquad d_{l-1} = I_l^{l-1}(b_{l} - A_l x_{l}^{k,1}) \qquad{\scriptsize\textit{# }I_l^{l-1}\textit{ := restriction operator}} \\
-    \\
-    &\qquad\text{# 3. Coarse grid solution.}\\
-    &\qquad \text{if l == 1:} \\
-    &\qquad\qquad y_0 = A_0^{-1}d_0 \qquad{\scriptsize\textit{# direct solver on coarsest grid}} \\
-    &\qquad \text{else:}\\
-    &\qquad\qquad \text{for i in range(}\mu\text{)} \\
-    &\qquad\qquad\qquad y_{l-1} = \text{ MGM(}l-1,y_{l-1},d_{l-1}\text{)} \\
-    \\
-    &\qquad\text{# 4. Coarse grid correction.}\\
-    &\qquad x_{l}^{k,2} = x_{l}^{k,1} + I_{l-1}^{l}y_{l-1} \qquad{\scriptsize\textit{# }I_{l-1}^l\textit{ := prolongation operator}} \\
-    \\
-    &\qquad\text{# 5. Apply } \nu \text{ smoothing steps of an iterative method }S. \\
-    &\qquad x_{l}^{k,3} = S^{\nu}x_l^{k,2} \qquad{\scriptsize\textit{# POST - SMOOTHING}} \\
-    \\
-    &\qquad\text{return }x_l^{k+1} := x_l^{k,3}
+  .. figure:: img/mgm_trans.png
+      :alt: mgm
+      :align: center
 
 The parameter :math:`\mu \in \mathbb{N}^+` determines the :blue:`cycle` of the multigrid iteration.
 For :math:`\mu = 1` we get the V-cycle

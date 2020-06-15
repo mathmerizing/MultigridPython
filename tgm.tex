@@ -1,0 +1,99 @@
+\documentclass{article}
+\thispagestyle{empty}
+
+%Laden externer Dateien
+\usepackage{import}
+%Laden der Package-Konfigurationen
+\import{../../../Documents/Latex/Preamble/}{pre_packages.tex}
+%Lade die Klasse script
+%\loadclass{script}
+
+\usepackage{listings}
+
+%Definiere Counter /numctr zur Nummerierung von equations
+\newcounter{numctr}
+%Füge /section in die Reset-Liste von /numctr hinzu
+\makeatletter
+\@addtoreset{numctr}{section}
+\makeatother
+
+%Math-Umgebungen werden umbrechbar
+\allowdisplaybreaks
+
+\pgfplotsset{compat=1.16}
+
+\def\I{\mathbb}
+
+
+% plotting
+\usepackage{pgf,tikz,pgfplots}
+\usepackage{mathrsfs}
+\usetikzlibrary{arrows}
+
+\usepackage{tikz-cd} 
+\usepackage{xcolor}
+\usepackage{svg}
+
+\usepackage{hyperref}
+\hypersetup{linktoc=all, linkcolor=blue}
+
+% define div operator
+\DeclareMathOperator{\diverg}{div}
+% define curl operator
+\DeclareMathOperator{\curl}{curl}
+% define restriction of function
+\newcommand\restrict[1]{\raisebox{-.5ex}{$|$}_{#1}}
+
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.96}
+\definecolor{lightgray}{rgb}{1,1,1}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{lightgray},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    xleftmargin=3pt
+}
+ 
+\lstset{style=mystyle}
+
+
+\begin{document}
+
+\pagestyle{plain}
+\lstset{language=Python}
+\begin{lstlisting}[mathescape=true]
+def TGM($\boldsymbol{x_h^k}$):
+	# 1. Apply $\nu_1$ smoothing steps of an iterative method $\boldsymbol{S_1}$.
+	$\boldsymbol{x_h^{k,1}} = \boldsymbol{S_1}^{\nu_1}\boldsymbol{x_h^{k}}$			# PRE - SMOOTHING
+	
+	# 2. Restrict defect to coarse grid.
+	$\boldsymbol{d_{2h}} = I_h^{2h}(\boldsymbol{b_{h}} - A_h\boldsymbol{x_{h}^{k,1}})$			# $I_h^{2h}$ := restriction operator
+	
+	# 3. Coarse grid correction.
+	$\boldsymbol{x_{h}^{k,2}} = \boldsymbol{x_{h}^{k,1}} + I_{2h}^{h}(A_{2h}^{-1}\boldsymbol{d_{2h}})$		# $I_{2h}^{h}$ := prolongation operator
+	
+	# 4. Apply $\nu_2$ smoothing steps of an iterative method $\boldsymbol{S_2}$.
+	$\boldsymbol{x_h^{k,3}} = \boldsymbol{S_2}^{\nu_2}\boldsymbol{x_h^{k,2}}$			# POST - SMOOTHING
+	
+	return $\boldsymbol{x_h^{k+1}} := \boldsymbol{x_h^{k,3}}$
+\end{lstlisting}
+
+
+\end{document}
