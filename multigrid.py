@@ -3,6 +3,7 @@ from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel
 from main import saveVtk, analyzeSolution
 
 import time
+import math
 import logging
 from functools import wraps
 import numpy as np
@@ -28,6 +29,7 @@ class Multigrid():
     @timeit
     def __init__(self, coarseGrid, numberLevels = 2, showGrids = False):
         self.numberLevels = numberLevels
+        self.prolongationMatrices = []
 
         # 1. getLocalMatrices
         K , M = getLocalMatrices(degree = 1)
@@ -64,15 +66,45 @@ class Multigrid():
             self.levelMatrices.append(levelMatrix)
             self.levelRHS.append(levelRHS)
 
-        logging.info(f"Number of DoFs: {len(self.grids[-1].dofs)} (by level: {','.join([str(len(g.dofs)) for g in self.grids])})")
+        if numberLevels > 1:
+            logging.info(f"Number of DoFs: {len(self.grids[-1].dofs)} (by level: {','.join([str(len(g.dofs)) for g in self.grids])})")
 
     @timeit
     def buildTransfer(self):
-        self.prolongationMatrices = []
         for i in range(self.numberLevels - 1):
             self.prolongationMatrices.append(
                 self.grids[i+1].getInterpolationMatrix()
             )
+
+    def addLevel(self, showGrids = False):
+        self.numberLevels += 1
+
+        # 1. getLocalMatrices
+        K , M = getLocalMatrices(degree = 1)
+
+        # 2. refine finest grid
+        levelGrid = self.grids[-1].refine()
+
+        # 3. print and visualize level grid
+        if showGrids:
+            print(levelGrid)
+            levelGrid.plot(title = f"Grid on level {i+1}")
+
+        self.grids.append(levelGrid)
+
+        # 4. assemble level matrix and apply boundary conditions
+        levelMatrix, levelRHS = assembleSystem(levelGrid, K, M)
+        applyBoundaryCondition(levelGrid,levelMatrix,levelRHS)
+
+        self.levelMatrices.append(levelMatrix)
+        self.levelRHS.append(levelRHS)
+
+        logging.info(f"Number of DoFs: {len(self.grids[-1].dofs)} (by level: {','.join([str(len(g.dofs)) for g in self.grids])})")
+
+        # 5. build new interpolation matrix
+        self.prolongationMatrices.append(
+            self.grids[-1].getInterpolationMatrix()
+        )
 
     def prolongate(self,vector,toLvl):
         return self.prolongationMatrices[toLvl - 1].dot(vector)
@@ -151,6 +183,7 @@ class Multigrid():
 
             solution = self.mgm(solution, self.levelRHS[-1], self.numberLevels - 1, mu, preSmoother, postSmoother, preSmoothSteps, postSmoothSteps, epsilon)
 
+        logging.info(f"Defect:         {round(normOfDefect, 2-int(math.floor(math.log10(abs(normOfDefect)))))}")
         logging.info(f"GMG iterations: {iterations}")
         saveVtk(solution, self.grids[-1])
 

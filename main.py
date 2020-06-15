@@ -93,6 +93,53 @@ def run():
         postSmoothSteps = parameters["SMOOTHING_STEPS"]
     )
 
+def runDemo():
+    from multigrid import Multigrid, millis
+    coarseGrid = homeworkGrid()
+
+    if parameters["SMOOTHER"] == "GaussSeidel":
+        PRE_SMOOTHER  = lambda x: ForwardGaussSeidel()(**x)
+        POST_SMOOTHER = lambda x: BackwardGaussSeidel()(**x)
+    else:
+        # parameters["SMOOTHER"] == "Jacobi"
+        PRE_SMOOTHER  = lambda x: Jacobi()(**x, omega = parameters["OMEGA"])
+        POST_SMOOTHER = lambda x: Jacobi()(**x, omega = parameters["OMEGA"])
+
+    mg = Multigrid(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
+
+    for numLvl in range(2, parameters["LEVELS"] + 1):
+        startTime = millis()
+
+        logging.info( "+-----------------------------------------+")
+        logging.info(f"+    MULITGRID (LEVELS = {lvlToStr(numLvl)})              +")
+        logging.info( "+-----------------------------------------+")
+
+        mg.addLevel(showGrids = parameters["SHOW_GRIDS"])
+
+        # run MG algo
+        mg(
+            maxIter = parameters["MAX_ITER"],
+            cycle = parameters["CYCLE"],
+            preSmoother = PRE_SMOOTHER,
+            postSmoother = POST_SMOOTHER,
+            preSmoothSteps = parameters["SMOOTHING_STEPS"],
+            postSmoothSteps = parameters["SMOOTHING_STEPS"]
+        )
+
+        logging.info(f"Total time:     {timeToStr(millis()-startTime)}")
+        logging.info("")
+
+def timeToStr(totalTime):
+    if totalTime < 1000:
+        return f"{totalTime} ms"
+    elif totalTime < 60 * 1000:
+        return f"{totalTime // 1000} s {totalTime % 1000} ms"
+    else:
+        return f"{totalTime // (60 * 1000)} min {(totalTime % (60 * 1000)) // 1000} s {totalTime % 1000} ms"
+
+def lvlToStr(level):
+    return " " * (level < 10) + str(level)
+
 
 def matricesPermutationEquivalent(A,B):
     from itertools import permutations

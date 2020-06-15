@@ -6,8 +6,8 @@ def run():
     #title = 'Domain'
 
     # edges
-    plt.plot([0.,-1.,-1.,-1.,0.,1.,1.], [1.,1.,0.,-1.,-1.,-1.,0.], color = "blue", label = "homogeneous Dirichlet BC")
-    plt.plot([1.,0.,0.], [0.,0.,1.], color = "red", label = "homogeneous Neumann BC")
+    plt.plot([0.,-1.,-1.,-1.,0.,1.,1.], [1.,1.,0.,-1.,-1.,-1.,0.], color = "blue", label = "homogeneous Neumann BC")
+    plt.plot([1.,0.,0.], [0.,0.,1.], color = "red", label = "homogeneous Dirichlet BC")
     plt.plot([-1.,0.,0.], [0.,0.,-1.], "--", color = "black")
 
     """

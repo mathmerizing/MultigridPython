@@ -25,8 +25,8 @@ meshes, when discretizing with linear finite elements.
 
 Problem setup
 ^^^^^^^^^^^^^
-Let :math:`\Omega := (-1,1)^2 \setminus (0,1)^2` be an L-shaped :blue:`domain`. We decompose the boundary of this domain :math:`\partial\Omega` into the Neumann boundary :math:`\Gamma_N := (0,1) \times \{0\} \cup \{0\} \times (0,1)`
-and the Dirichlet boundary :math:`\Gamma_D := \partial\Omega \setminus \Gamma_N`.
+Let :math:`\Omega := (-1,1)^2 \setminus (0,1)^2` be an L-shaped :blue:`domain`. We decompose the boundary of this domain :math:`\partial\Omega` into the Neumann boundary :math:`\Gamma_D := (0,1) \times \{0\} \cup \{0\} \times (0,1)`
+and the Dirichlet boundary :math:`\Gamma_N := \partial\Omega \setminus \Gamma_D`.
 
 Next, we define the :blue:`ansatz` and :blue:`test function space` :math:`V := \left\{ u \in H^1(\Omega)\mid u = 0 \text{ on } \Gamma_D \right\}`,
 where
