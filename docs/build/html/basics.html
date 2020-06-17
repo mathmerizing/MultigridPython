@@ -269,7 +269,28 @@ are equivalent. Hence it suffices to solve the weak form of the problem.</p>
 </div>
 <div class="section" id="finite-element-method">
 <h2>Finite Element Method<a class="headerlink" href="#finite-element-method" title="Permalink to this headline">¶</a></h2>
-<p>TODO !!!</p>
+<p>The problem that we are facing is that <span class="math notranslate nohighlight">\(V\)</span> is an infinite dimensional function space
+and we need the ability to solve the weak form with a classical computer.
+Hence instead we work with a finite dimensional subspace <span class="math notranslate nohighlight">\(V_h \subset V\)</span>.
+This will enable us to rewrite the weak form as a linear equation system.</p>
+<p>Let a subdivision of <span class="math notranslate nohighlight">\(\Omega\)</span> into <span class="blue">finite elements</span> <span class="math notranslate nohighlight">\((K,P_1,\Sigma)\)</span>
+be given, where</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(K\)</span> is a two dimensional right triangle,</p></li>
+<li><p><span class="math notranslate nohighlight">\(P_1(K) := \operatorname{span}\{1, x_1, x_2 \}\)</span> is the space of linear functions defined on <span class="math notranslate nohighlight">\(K\)</span>,</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Sigma := \{a_0, a_1, a_2 \}\)</span> is a set of degrees of freedom (DoF), which here are the values of the polynomial at the vertices of <span class="math notranslate nohighlight">\(K\)</span>.</p></li>
+</ul>
+<p>Then a <span class="math notranslate nohighlight">\(P_1(K)\)</span> function is defined by</p>
+<div class="math notranslate nohighlight">
+\[u(x) = a_0 + a_1x_1 + a_2x_2 \quad \forall x = (x_1,x_2) \in K.\]</div>
+<p>To recapitulate: First, we have divided <span class="math notranslate nohighlight">\(\Omega\)</span> into triangles <span class="math notranslate nohighlight">\(K_1, ..., K_m\)</span>. Examples for this can be found in the section <a class="reference external" href="#grid-setup">“Grid Setup”</a>.
+Secondly, we have seen that we have the parameters (DoFs) which can describe any linear function on such a triangle <span class="math notranslate nohighlight">\(K_i\)</span>.
+Now simply define our function space <span class="math notranslate nohighlight">\(V_h\)</span> as the space of functions which are continuous on the whole domain <span class="math notranslate nohighlight">\(\Omega\)</span>, linear on each triangle <span class="math notranslate nohighlight">\(K_i\)</span> and satisfy the Dirichlet boundary conditions, i.e.</p>
+<div class="math notranslate nohighlight">
+\[V_h := \{ v_h \in C(\Omega) \mid v_h |_{K_i} \in P_1(K_i) \quad \forall 1 \leq i \leq m,\ v_h = 0 \text{ on } \Gamma_D \}.\]</div>
+<p>We use the index <span class="math notranslate nohighlight">\(h\)</span> to show that we are not longer using the infinite dimensional function space <span class="math notranslate nohighlight">\(V\)</span>,
+but a finite dimensional subspace which is defined on triangles <span class="math notranslate nohighlight">\(K_i\)</span> where the short sides have length <span class="math notranslate nohighlight">\(h\)</span>.</p>
+<p>TODO: discretized weak form, applying BC, computing linear equation system</p>
 </div>
 <div class="section" id="iterative-methods">
 <h2>Iterative Methods<a class="headerlink" href="#iterative-methods" title="Permalink to this headline">¶</a></h2>

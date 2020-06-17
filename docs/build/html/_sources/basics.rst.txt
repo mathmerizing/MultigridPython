@@ -121,8 +121,36 @@ are equivalent. Hence it suffices to solve the weak form of the problem.
 
 Finite Element Method
 ^^^^^^^^^^^^^^^^^^^^^
-TODO !!!
+The problem that we are facing is that :math:`V` is an infinite dimensional function space
+and we need the ability to solve the weak form with a classical computer.
+Hence instead we work with a finite dimensional subspace :math:`V_h \subset V`.
+This will enable us to rewrite the weak form as a linear equation system.
 
+Let a subdivision of :math:`\Omega` into :blue:`finite elements` :math:`(K,P_1,\Sigma)`
+be given, where
+
+* :math:`K` is a two dimensional right triangle,
+* :math:`P_1(K) := \operatorname{span}\{1, x_1, x_2 \}` is the space of linear functions defined on :math:`K`,
+* :math:`\Sigma := \{a_0, a_1, a_2 \}` is a set of degrees of freedom (DoF), which here are the values of the polynomial at the vertices of :math:`K`.
+
+Then a :math:`P_1(K)` function is defined by
+
+.. math::
+
+  u(x) = a_0 + a_1x_1 + a_2x_2 \quad \forall x = (x_1,x_2) \in K.
+
+To recapitulate: First, we have divided :math:`\Omega` into triangles :math:`K_1, ..., K_m`. Examples for this can be found in the section `"Grid Setup" <#grid-setup>`__.
+Secondly, we have seen that we have the parameters (DoFs) which can describe any linear function on such a triangle :math:`K_i`.
+Now simply define our function space :math:`V_h` as the space of functions which are continuous on the whole domain :math:`\Omega`, linear on each triangle :math:`K_i` and satisfy the Dirichlet boundary conditions, i.e.
+
+.. math::
+
+  V_h := \{ v_h \in C(\Omega) \mid v_h |_{K_i} \in P_1(K_i) \quad \forall 1 \leq i \leq m,\ v_h = 0 \text{ on } \Gamma_D \}.
+
+We use the index :math:`h` to show that we are not longer using the infinite dimensional function space :math:`V`,
+but a finite dimensional subspace which is defined on triangles :math:`K_i` where the short sides have length :math:`h`.
+
+TODO: discretized weak form, applying BC, computing linear equation system
 
 Iterative Methods
 ^^^^^^^^^^^^^^^^^
