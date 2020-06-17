@@ -131,7 +131,7 @@ be given, where
 
 * :math:`K` is a two dimensional right triangle,
 * :math:`P_1(K) := \operatorname{span}\{1, x_1, x_2 \}` is the space of linear functions defined on :math:`K`,
-* :math:`\Sigma := \{a_0, a_1, a_2 \}` is a set of degrees of freedom (DoF), which here are the values of the polynomial at the vertices of :math:`K`.
+* :math:`\Sigma := \{a_0, a_1, a_2 \}` is a set of :blue:`degrees of freedom` (DoF), which here are the values of the polynomial at the vertices of :math:`K`.
 
 Then a :math:`P_1(K)` function is defined by
 
@@ -150,7 +150,69 @@ Now simply define our function space :math:`V_h` as the space of functions which
 We use the index :math:`h` to show that we are not longer using the infinite dimensional function space :math:`V`,
 but a finite dimensional subspace which is defined on triangles :math:`K_i` where the short sides have length :math:`h`.
 
-TODO: discretized weak form, applying BC, computing linear equation system
+Thus we are now trying to solve the discrete weak form:
+
+.. admonition:: Discrete weak form
+
+  Find :math:`u_h \in V_h` such that
+
+  .. math::
+
+    a(u_h,v_h) = l(v_h) \quad \forall v_h \in V_h
+
+Furthermore, we know that :math:`V_h` is finite dimensional and we can write down its basis, since we know the bases of :math:`P_1(K_i)`.
+Hence
+
+.. math::
+
+  V_h = \operatorname{span}\{ \phi_1, \dots, \phi_{n_{DoFs}} \},
+
+where :math:`\phi_i` is the basis function corresponding to the i.th degree of freedom, i.e. the i.th grid point. It follows that
+
+.. math::
+
+  u_h = \sum_{i= 0}^{n_{DoFs}} u_i \phi_i \quad \text{and} \quad v_h = \sum_{i= 0}^{n_{DoFs}} v_i \phi_i
+
+for some :math:`\begin{pmatrix}u_1, \dots u_{n_{DoFs}}\end{pmatrix}^T, \begin{pmatrix}v_1, \dots v_{n_{DoFs}}\end{pmatrix}^T \in \mathbb{R}^{n_{DoFs}}`. Therefore the discrete weak form can be written as
+
+.. math::
+
+  a\left(\sum_{i= 0}^{n_{DoFs}} u_i \phi_i,\sum_{j= 0}^{n_{DoFs}} v_j \phi_j \right) = l\left(\sum_{j= 0}^{n_{DoFs}} v_j \phi_j \right).
+
+Since :math:`a` is linear in the second argument and :math:`l` is also linear, it is thus sufficient to solve
+
+.. math::
+
+  a\left(\sum_{i= 0}^{n_{DoFs}} u_i \phi_i,\phi_j \right) = l\left(\phi_j \right) \quad \forall 1 \leq j \leq n_{DoFs}.
+
+The convection-diffusion problem is linear itself, thus :math:`a` is also linear in the first argument and we get
+
+.. math::
+
+  \sum_{i= 0}^{n_{DoFs}} u_i\ a\left(\phi_i,\phi_j \right) = l\left(\phi_j \right) \quad \forall 1 \leq j \leq n_{DoFs}.
+
+This can also be written as a linear equation system
+
+.. math::
+
+  \begin{bmatrix}
+    a\left(\phi_1,\phi_1 \right) & \cdots & a\left(\phi_{n_{DoFs},\phi_1} \right) \\
+    \vdots & \ddots & \vdots \\
+    a\left(\phi_1,\phi_{n_{DoFs}} \right) & \cdots & a\left(\phi_{n_{DoFs}},\phi_{n_{DoFs}} \right)
+  \end{bmatrix}
+  \begin{bmatrix}
+    u_1\\
+    \vdots\\
+    u_{n_{DoFs}}
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    l(u_1)\\
+    \vdots\\
+    l(u_{n_{DoFs}})
+  \end{bmatrix}.
+
+TODO: computing linear equation system , applying BC
 
 Iterative Methods
 ^^^^^^^^^^^^^^^^^

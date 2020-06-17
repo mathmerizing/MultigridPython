@@ -278,7 +278,7 @@ be given, where</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(K\)</span> is a two dimensional right triangle,</p></li>
 <li><p><span class="math notranslate nohighlight">\(P_1(K) := \operatorname{span}\{1, x_1, x_2 \}\)</span> is the space of linear functions defined on <span class="math notranslate nohighlight">\(K\)</span>,</p></li>
-<li><p><span class="math notranslate nohighlight">\(\Sigma := \{a_0, a_1, a_2 \}\)</span> is a set of degrees of freedom (DoF), which here are the values of the polynomial at the vertices of <span class="math notranslate nohighlight">\(K\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Sigma := \{a_0, a_1, a_2 \}\)</span> is a set of <span class="blue">degrees of freedom</span> (DoF), which here are the values of the polynomial at the vertices of <span class="math notranslate nohighlight">\(K\)</span>.</p></li>
 </ul>
 <p>Then a <span class="math notranslate nohighlight">\(P_1(K)\)</span> function is defined by</p>
 <div class="math notranslate nohighlight">
@@ -290,7 +290,48 @@ Now simply define our function space <span class="math notranslate nohighlight">
 \[V_h := \{ v_h \in C(\Omega) \mid v_h |_{K_i} \in P_1(K_i) \quad \forall 1 \leq i \leq m,\ v_h = 0 \text{ on } \Gamma_D \}.\]</div>
 <p>We use the index <span class="math notranslate nohighlight">\(h\)</span> to show that we are not longer using the infinite dimensional function space <span class="math notranslate nohighlight">\(V\)</span>,
 but a finite dimensional subspace which is defined on triangles <span class="math notranslate nohighlight">\(K_i\)</span> where the short sides have length <span class="math notranslate nohighlight">\(h\)</span>.</p>
-<p>TODO: discretized weak form, applying BC, computing linear equation system</p>
+<p>Thus we are now trying to solve the discrete weak form:</p>
+<div class="admonition-discrete-weak-form admonition">
+<p class="admonition-title">Discrete weak form</p>
+<p>Find <span class="math notranslate nohighlight">\(u_h \in V_h\)</span> such that</p>
+<div class="math notranslate nohighlight">
+\[a(u_h,v_h) = l(v_h) \quad \forall v_h \in V_h\]</div>
+</div>
+<p>Furthermore, we know that <span class="math notranslate nohighlight">\(V_h\)</span> is finite dimensional and we can write down its basis, since we know the bases of <span class="math notranslate nohighlight">\(P_1(K_i)\)</span>.
+Hence</p>
+<div class="math notranslate nohighlight">
+\[V_h = \operatorname{span}\{ \phi_1, \dots, \phi_{n_{DoFs}} \},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\phi_i\)</span> is the basis function corresponding to the i.th degree of freedom, i.e. the i.th grid point. It follows that</p>
+<div class="math notranslate nohighlight">
+\[u_h = \sum_{i= 0}^{n_{DoFs}} u_i \phi_i \quad \text{and} \quad v_h = \sum_{i= 0}^{n_{DoFs}} v_i \phi_i\]</div>
+<p>for some <span class="math notranslate nohighlight">\(\begin{pmatrix}u_1, \dots u_{n_{DoFs}}\end{pmatrix}^T, \begin{pmatrix}v_1, \dots v_{n_{DoFs}}\end{pmatrix}^T \in \mathbb{R}^{n_{DoFs}}\)</span>. Therefore the discrete weak form can be written as</p>
+<div class="math notranslate nohighlight">
+\[a\left(\sum_{i= 0}^{n_{DoFs}} u_i \phi_i,\sum_{j= 0}^{n_{DoFs}} v_j \phi_j \right) = l\left(\sum_{j= 0}^{n_{DoFs}} v_j \phi_j \right).\]</div>
+<p>Since <span class="math notranslate nohighlight">\(a\)</span> is linear in the second argument and <span class="math notranslate nohighlight">\(l\)</span> is also linear, it is thus sufficient to solve</p>
+<div class="math notranslate nohighlight">
+\[a\left(\sum_{i= 0}^{n_{DoFs}} u_i \phi_i,\phi_j \right) = l\left(\phi_j \right) \quad \forall 1 \leq j \leq n_{DoFs}.\]</div>
+<p>The convection-diffusion problem is linear itself, thus <span class="math notranslate nohighlight">\(a\)</span> is also linear in the first argument and we get</p>
+<div class="math notranslate nohighlight">
+\[\sum_{i= 0}^{n_{DoFs}} u_i\ a\left(\phi_i,\phi_j \right) = l\left(\phi_j \right) \quad \forall 1 \leq j \leq n_{DoFs}.\]</div>
+<p>This can also be written as a linear equation system</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+  a\left(\phi_1,\phi_1 \right) &amp; \cdots &amp; a\left(\phi_{n_{DoFs},\phi_1} \right) \\
+  \vdots &amp; \ddots &amp; \vdots \\
+  a\left(\phi_1,\phi_{n_{DoFs}} \right) &amp; \cdots &amp; a\left(\phi_{n_{DoFs}},\phi_{n_{DoFs}} \right)
+\end{bmatrix}
+\begin{bmatrix}
+  u_1\\
+  \vdots\\
+  u_{n_{DoFs}}
+\end{bmatrix}
+=
+\begin{bmatrix}
+  l(u_1)\\
+  \vdots\\
+  l(u_{n_{DoFs}})
+\end{bmatrix}.\end{split}\]</div>
+<p>TODO: computing linear equation system , applying BC</p>
 </div>
 <div class="section" id="iterative-methods">
 <h2>Iterative Methods<a class="headerlink" href="#iterative-methods" title="Permalink to this headline">¶</a></h2>
