@@ -14,7 +14,7 @@ TODO: installation
    :caption: Table of Contents:
 
    basics
-   results
+   Multigrid.ipynb
    license
    help
 
