@@ -209,7 +209,7 @@ and the Dirichlet boundary <span class="math notranslate nohighlight">\(\Gamma_N
 <p>Next, we define the <span class="blue">ansatz</span> and <span class="blue">test function space</span> <span class="math notranslate nohighlight">\(V := \left\{ u \in H^1(\Omega)\mid u = 0 \text{ on } \Gamma_D \right\}\)</span>,
 where</p>
 <div class="math notranslate nohighlight">
-\[H^1(\Omega) := W^{1,2}(\Omega) := \left\{ u \in L^2(\Omega) \mid \nabla u \in L^2( \Omega ) \right\}\]</div>
+\[H^1(\Omega) := W^{1,2}(\Omega) := \left\{ u \in L^2(\Omega) \mid |\nabla u| \in L^2( \Omega ) \right\}\]</div>
 <p>is the Sobolev space containing the weakly differentiable functions
 in <span class="math notranslate nohighlight">\(\Omega\)</span>. Note that we haven’t explicitly prescribed any boundary conditions on <span class="math notranslate nohighlight">\(\Gamma_N\)</span> in the function space,
 since the homogeneous Neumann boundary conditions come up naturally when deriving the variational form of the problem.
@@ -277,19 +277,20 @@ This will enable us to rewrite the weak form as a linear equation system.</p>
 be given, where</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(K\)</span> is a two dimensional right triangle,</p></li>
-<li><p><span class="math notranslate nohighlight">\(P_1(K) := \operatorname{span}\{1, x_1, x_2 \}\)</span> is the space of linear functions defined on <span class="math notranslate nohighlight">\(K\)</span>,</p></li>
+<li><p><span class="math notranslate nohighlight">\(P_1(K) := \operatorname{span}\{1-x_1-x_2, x_1, x_2 \}\)</span> is the space of linear functions defined on <span class="math notranslate nohighlight">\(K\)</span>,</p></li>
 <li><p><span class="math notranslate nohighlight">\(\Sigma := \{a_0, a_1, a_2 \}\)</span> is a set of <span class="blue">degrees of freedom</span> (DoF), which here are the values of the polynomial at the vertices of <span class="math notranslate nohighlight">\(K\)</span>.</p></li>
 </ul>
 <p>Then a <span class="math notranslate nohighlight">\(P_1(K)\)</span> function is defined by</p>
 <div class="math notranslate nohighlight">
 \[u(x) = a_0 + a_1x_1 + a_2x_2 \quad \forall x = (x_1,x_2) \in K.\]</div>
 <p>To recapitulate: First, we have divided <span class="math notranslate nohighlight">\(\Omega\)</span> into triangles <span class="math notranslate nohighlight">\(K_1, ..., K_m\)</span>. Examples for this can be found in the section <a class="reference external" href="#grid-setup">“Grid Setup”</a>.
-Secondly, we have seen that we have the parameters (DoFs) which can describe any linear function on such a triangle <span class="math notranslate nohighlight">\(K_i\)</span>.
-Now simply define our function space <span class="math notranslate nohighlight">\(V_h\)</span> as the space of functions which are continuous on the whole domain <span class="math notranslate nohighlight">\(\Omega\)</span>, linear on each triangle <span class="math notranslate nohighlight">\(K_i\)</span> and satisfy the Dirichlet boundary conditions, i.e.</p>
+Secondly, we have seen that we have the parameters (DoFs) which can describe any linear function on such a triangle <span class="math notranslate nohighlight">\(K_k\)</span>.
+Now simply define our function space <span class="math notranslate nohighlight">\(V_h\)</span> as the space of functions which are continuous on the whole domain <span class="math notranslate nohighlight">\(\Omega\)</span>, linear on each triangle <span class="math notranslate nohighlight">\(K_k\)</span> and satisfy the Dirichlet boundary conditions, i.e.</p>
 <div class="math notranslate nohighlight">
-\[V_h := \{ v_h \in C(\Omega) \mid v_h |_{K_i} \in P_1(K_i) \quad \forall 1 \leq i \leq m,\ v_h = 0 \text{ on } \Gamma_D \}.\]</div>
+\[V_h := \{ v_h \in C(\Omega) \mid v_h |_{K_k} \in P_1(K_k) \quad \forall 1 \leq k \leq m,\ v_h = 0 \text{ on } \Gamma_D \}.\]</div>
 <p>We use the index <span class="math notranslate nohighlight">\(h\)</span> to show that we are not longer using the infinite dimensional function space <span class="math notranslate nohighlight">\(V\)</span>,
-but a finite dimensional subspace which is defined on triangles <span class="math notranslate nohighlight">\(K_i\)</span> where the short sides have length <span class="math notranslate nohighlight">\(h\)</span>.</p>
+but a finite dimensional subspace which is defined on triangles <span class="math notranslate nohighlight">\(K_k\)</span> where the short sides have length <span class="math notranslate nohighlight">\(h\)</span>.
+By working with <span class="math notranslate nohighlight">\(V_h\)</span>, we now try to find an element-wise linear approximation to the solution of the weak form.</p>
 <p>Thus we are now trying to solve the discrete weak form:</p>
 <div class="admonition-discrete-weak-form admonition">
 <p class="admonition-title">Discrete weak form</p>
@@ -297,7 +298,7 @@ but a finite dimensional subspace which is defined on triangles <span class="mat
 <div class="math notranslate nohighlight">
 \[a(u_h,v_h) = l(v_h) \quad \forall v_h \in V_h\]</div>
 </div>
-<p>Furthermore, we know that <span class="math notranslate nohighlight">\(V_h\)</span> is finite dimensional and we can write down its basis, since we know the bases of <span class="math notranslate nohighlight">\(P_1(K_i)\)</span>.
+<p>Furthermore, we know that <span class="math notranslate nohighlight">\(V_h\)</span> is finite dimensional and we can write down its basis, since we know the bases of <span class="math notranslate nohighlight">\(P_1(K_k)\)</span>.
 Hence</p>
 <div class="math notranslate nohighlight">
 \[V_h = \operatorname{span}\{ \phi_1, \dots, \phi_{n_{DoFs}} \},\]</div>
@@ -316,7 +317,7 @@ Hence</p>
 <p>This can also be written as a linear equation system</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
-  a\left(\phi_1,\phi_1 \right) &amp; \cdots &amp; a\left(\phi_{n_{DoFs},\phi_1} \right) \\
+  a\left(\phi_1,\phi_1 \right) &amp; \cdots &amp; a\left(\phi_{n_{DoFs}},\phi_1 \right) \\
   \vdots &amp; \ddots &amp; \vdots \\
   a\left(\phi_1,\phi_{n_{DoFs}} \right) &amp; \cdots &amp; a\left(\phi_{n_{DoFs}},\phi_{n_{DoFs}} \right)
 \end{bmatrix}
@@ -331,7 +332,62 @@ Hence</p>
   \vdots\\
   l(u_{n_{DoFs}})
 \end{bmatrix}.\end{split}\]</div>
-<p>TODO: computing linear equation system , applying BC</p>
+<p>To remain consistent with future chapters, we follow the naming convention</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}A_h &amp;:= \begin{bmatrix}
+  a\left(\phi_1,\phi_1 \right) &amp; \cdots &amp; a\left(\phi_{n_{DoFs}},\phi_1 \right) \\
+  \vdots &amp; \ddots &amp; \vdots \\
+  a\left(\phi_1,\phi_{n_{DoFs}} \right) &amp; \cdots &amp; a\left(\phi_{n_{DoFs}},\phi_{n_{DoFs}} \right)
+\end{bmatrix}, \\
+x_h &amp;:= \begin{bmatrix}
+  u_1\\
+  \vdots\\
+  u_{n_{DoFs}}
+\end{bmatrix}  \quad \text{ and } \\
+b_h &amp;:= \begin{bmatrix}
+  l(u_1)\\
+  \vdots\\
+  l(u_{n_{DoFs}})
+\end{bmatrix}.\end{split}\]</div>
+<p>To be able to solve <span class="math notranslate nohighlight">\(A_h x_h = b_h\)</span>, we need an efficient way to compute <span class="math notranslate nohighlight">\(a\left(\phi_i,\phi_j \right)\)</span> and <span class="math notranslate nohighlight">\(l\left(\phi_j \right)\)</span>.
+For that we use that <span class="math notranslate nohighlight">\(\Omega = \cup_{k = 1}^{n_{DoFs}}K_k\)</span> and we thus get</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}a(\phi_i,\phi_j) &amp;= \int_{\Omega} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{\Omega} c \phi_i \cdot \phi_j\ dx \\
+                &amp;= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{K_k} c \phi_i \cdot \phi_j\ dx  \right),\end{split}\]</div>
+<p>similarly we get for the right hand functional</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}l(\phi_j) &amp;= \int_{\Omega} f \cdot \phi_j\ dx \\
+          &amp;= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} f \cdot \phi_j\ dx \right).\end{split}\]</div>
+<p>Note that many of these integrals are zero, since the basis functions <span class="math notranslate nohighlight">\(\phi_i\)</span> only have support on the triangles that contain the vertex corresponding
+to the i.th degree of freedom. Furthermore, we use the isoparametric concept that allows us to assemble the <span class="blue">system matrix</span> <span class="math notranslate nohighlight">\(A_h\)</span> and <span class="blue">right side</span> <span class="math notranslate nohighlight">\(b_h\)</span>
+by once computing integrals on a reference element <span class="math notranslate nohighlight">\(\hat{K}\)</span> and then transforming the results to the elements <span class="math notranslate nohighlight">\(K_k\)</span>.</p>
+<div class="figure align-center">
+<img alt="trafo" src="_images/trafo.png" />
+</div>
+<p class="centered">
+<strong>Figure 2: Transformation from reference element to finite element</strong></p><p>We now apply the transformation theorem</p>
+<div class="math notranslate nohighlight">
+\[\int_{\hat{K}} g\left(\hat{x}\right)\ d\hat{x} = \int_{K_k} g\left(T_k^{-1}(x)\right)\left|\det\left(\nabla T_k^{-1}(x)\right)\right|\ dx\]</div>
+<p>to all integrals that need to be evaluated in the discrete weak form.</p>
+<p>Then the algorithm for the assembly is given by</p>
+<div class="figure align-center">
+<img alt="assembly" src="_images/assembly.png" />
+</div>
+<p>At the end of the assembly, we need to account for the Dirichlet boundary constraints, e.g. let a constraint <span class="math notranslate nohighlight">\(u_{\tau} = \xi\)</span> be given.
+Then we would need to make sure that <span class="math notranslate nohighlight">\((A_h)_{\tau,j} = \delta_{\tau,j}\)</span> for all <span class="math notranslate nohighlight">\(1 \leq j \leq m\)</span>.
+Here <span class="math notranslate nohighlight">\(\delta_{\tau,j}\)</span> denotes the Kronecker delta, which is defined as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\delta_{\tau,j} := \begin{cases}
+  1 &amp; \text{for } j = \tau \\
+  0 &amp; \text{for } j \neq \tau
+  \end{cases}.\end{split}\]</div>
+<p>Futhermore, we would need to set <span class="math notranslate nohighlight">\((b_h)_{\tau} = \xi\)</span>.
+Obviously these steps ensure that when solving the linear system <span class="math notranslate nohighlight">\(A_h x_h = b_h\)</span>,
+we get <span class="math notranslate nohighlight">\(u_{\tau} = \xi\)</span>. In our model problem, we only have homogeneous Dirichlet constraints.
+Thus, we only need to find all indices <span class="math notranslate nohighlight">\(\tau\)</span> at the Dirichlet boundary <span class="math notranslate nohighlight">\(\Gamma_D\)</span>
+and apply the procedure from above with <span class="math notranslate nohighlight">\(\xi = 0\)</span>.</p>
+<p>Overall, the Finite Element Method enabled us to transform a discrete form of the convection-diffusion equation
+on a given grid into a linear equation system. In the following, we will investigate how such a linear equation system can be solved iteratively.</p>
 </div>
 <div class="section" id="iterative-methods">
 <h2>Iterative Methods<a class="headerlink" href="#iterative-methods" title="Permalink to this headline">¶</a></h2>
@@ -346,15 +402,15 @@ The grid consists of objects of type <code class="code docutils literal notransl
 <div class="figure align-center">
 <img alt="coarse_grid" src="_images/CoarseGrid.svg" /></div>
 <p class="centered">
-<strong>Figure 2: Coarse grid (<span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>)</strong></p><p>For the multigrid method, we need a sequence of such grids.
+<strong>Figure 3: Coarse grid (<span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>)</strong></p><p>For the multigrid method, we need a sequence of such grids.
 In this work, we restrict our analysis to uniformly refined meshes.
 How can we create these refined meshes? We have to loop over all triangles of the grid
 and then refine them.</p>
 <div class="figure align-center">
 <img alt="triangle_refinement" src="_images/triangle_refinement.svg" /></div>
 <p class="centered">
-<strong>Figure 3: Refining a triangle</strong></p><p>To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
-As shown in figure 3, through the refinement process a triangle is being divided
+<strong>Figure 4: Refining a triangle</strong></p><p>To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
+As shown in figure 4, through the refinement process a triangle is being divided
 into four smaller triangles. Each <code class="code docutils literal notranslate"><span class="pre">Node</span></code> object needs to know its parent nodes.
 The parents are two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
 In the literature [1] these relationships are being stored in a father-son list.
@@ -365,12 +421,12 @@ refine the coarse grid to construct that grid.</p>
 <div class="figure align-center">
 <img alt="grid_level_1" src="_images/GridLevel1.svg" /></div>
 <p class="centered">
-<strong>Figure 4: Grid on level 1 (<span class="math notranslate nohighlight">\(\mathbb{T}_1\)</span>)</strong></p><p>We continue the process of refining the grid, until we end up with a grid, which has enough nodes
+<strong>Figure 5: Grid on level 1 (<span class="math notranslate nohighlight">\(\mathbb{T}_1\)</span>)</strong></p><p>We continue the process of refining the grid, until we end up with a grid, which has enough nodes
 to ensure that a sufficiently good approximation to the exact solution can be computed.</p>
 <div class="figure align-center">
 <img alt="grid_level_2" src="_images/GridLevel2.svg" /></div>
 <p class="centered">
-<strong>Figure 5: Grid on level 2 (<span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span>)</strong></p><p>The grid on the highest level, in this case <span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span> or more generally <span class="math notranslate nohighlight">\(\mathbb{T}_L\)</span>, is called the finest grid
+<strong>Figure 6: Grid on level 2 (<span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span>)</strong></p><p>The grid on the highest level, in this case <span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span> or more generally <span class="math notranslate nohighlight">\(\mathbb{T}_L\)</span>, is called the finest grid
 and will be used to assemble the system matrix.</p>
 <p>Using the Finite Element Method, we can discretize the weak form of our PDE on each level grid
 with linear finite elements. For each level <span class="math notranslate nohighlight">\(0 \leq l \leq L\)</span>, we get a linear equation system</p>
@@ -445,7 +501,7 @@ For <span class="math notranslate nohighlight">\(\mu = 1\)</span> we get the V-c
 \draw[-&gt;] (F) to (G);
 }" /></p>
 </div><p class="centered">
-<strong>Figure 6: V-cycle</strong></p><p>and for <span class="math notranslate nohighlight">\(\mu = 2\)</span> we get the W-cycle.</p>
+<strong>Figure 7: V-cycle</strong></p><p>and for <span class="math notranslate nohighlight">\(\mu = 2\)</span> we get the W-cycle.</p>
 <div class="figure">
 <p><img src="_images/tikz-362301dbc83d59069c61878e8ce3341f1b2ddb32.png" alt="\node (A) at (0,3) [circle, minimum size=2mm, inner sep=0pt,draw] {};
 \node (B) at (1,2) [circle, minimum size=2mm, inner sep=0pt,draw] {};
@@ -500,7 +556,7 @@ For <span class="math notranslate nohighlight">\(\mu = 1\)</span> we get the V-c
 \draw[-&gt;] (N) to (O);
 }" /></p>
 </div><p class="centered">
-<strong>Figure 7: W-cycle</strong></p><p>In the figures of these schemes, white circles stand for <span class="math notranslate nohighlight">\(\nu\)</span> steps of an iterative solver,
+<strong>Figure 8: W-cycle</strong></p><p>In the figures of these schemes, white circles stand for <span class="math notranslate nohighlight">\(\nu\)</span> steps of an iterative solver,
 black circles represent a direct solver, blue arrows illustrate a restriction and green arrows illustrate a prolongation.</p>
 </div>
 <div class="section" id="grid-transfer">
@@ -541,7 +597,7 @@ it is helpful to a see how the the grid transfer works for one dimensional linea
 <img alt="grid_transfer" src="_images/grid_transfer.png" />
 </div>
 <p class="centered">
-<strong>Figure 8: Basis functions on the first two levels</strong></p><p>It holds</p>
+<strong>Figure 9: Basis functions on the first two levels</strong></p><p>It holds</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\varphi_1^0 &amp;= \varphi_1^1 + \frac{1}{2}\varphi_3^1, \\
 \varphi_2^0 &amp;= \varphi_2^1 + \frac{1}{2}\varphi_3^1.\end{split}\]</div>

@@ -33,7 +33,7 @@ where
 
 .. math::
 
-  H^1(\Omega) := W^{1,2}(\Omega) := \left\{ u \in L^2(\Omega) \mid \nabla u \in L^2( \Omega ) \right\}
+  H^1(\Omega) := W^{1,2}(\Omega) := \left\{ u \in L^2(\Omega) \mid |\nabla u| \in L^2( \Omega ) \right\}
 
 is the Sobolev space containing the weakly differentiable functions
 in :math:`\Omega`. Note that we haven't explicitly prescribed any boundary conditions on :math:`\Gamma_N` in the function space,
@@ -130,7 +130,7 @@ Let a subdivision of :math:`\Omega` into :blue:`finite elements` :math:`(K,P_1,\
 be given, where
 
 * :math:`K` is a two dimensional right triangle,
-* :math:`P_1(K) := \operatorname{span}\{1, x_1, x_2 \}` is the space of linear functions defined on :math:`K`,
+* :math:`P_1(K) := \operatorname{span}\{1-x_1-x_2, x_1, x_2 \}` is the space of linear functions defined on :math:`K`,
 * :math:`\Sigma := \{a_0, a_1, a_2 \}` is a set of :blue:`degrees of freedom` (DoF), which here are the values of the polynomial at the vertices of :math:`K`.
 
 Then a :math:`P_1(K)` function is defined by
@@ -140,15 +140,16 @@ Then a :math:`P_1(K)` function is defined by
   u(x) = a_0 + a_1x_1 + a_2x_2 \quad \forall x = (x_1,x_2) \in K.
 
 To recapitulate: First, we have divided :math:`\Omega` into triangles :math:`K_1, ..., K_m`. Examples for this can be found in the section `"Grid Setup" <#grid-setup>`__.
-Secondly, we have seen that we have the parameters (DoFs) which can describe any linear function on such a triangle :math:`K_i`.
-Now simply define our function space :math:`V_h` as the space of functions which are continuous on the whole domain :math:`\Omega`, linear on each triangle :math:`K_i` and satisfy the Dirichlet boundary conditions, i.e.
+Secondly, we have seen that we have the parameters (DoFs) which can describe any linear function on such a triangle :math:`K_k`.
+Now simply define our function space :math:`V_h` as the space of functions which are continuous on the whole domain :math:`\Omega`, linear on each triangle :math:`K_k` and satisfy the Dirichlet boundary conditions, i.e.
 
 .. math::
 
-  V_h := \{ v_h \in C(\Omega) \mid v_h |_{K_i} \in P_1(K_i) \quad \forall 1 \leq i \leq m,\ v_h = 0 \text{ on } \Gamma_D \}.
+  V_h := \{ v_h \in C(\Omega) \mid v_h |_{K_k} \in P_1(K_k) \quad \forall 1 \leq k \leq m,\ v_h = 0 \text{ on } \Gamma_D \}.
 
 We use the index :math:`h` to show that we are not longer using the infinite dimensional function space :math:`V`,
-but a finite dimensional subspace which is defined on triangles :math:`K_i` where the short sides have length :math:`h`.
+but a finite dimensional subspace which is defined on triangles :math:`K_k` where the short sides have length :math:`h`.
+By working with :math:`V_h`, we now try to find an element-wise linear approximation to the solution of the weak form.
 
 Thus we are now trying to solve the discrete weak form:
 
@@ -160,7 +161,7 @@ Thus we are now trying to solve the discrete weak form:
 
     a(u_h,v_h) = l(v_h) \quad \forall v_h \in V_h
 
-Furthermore, we know that :math:`V_h` is finite dimensional and we can write down its basis, since we know the bases of :math:`P_1(K_i)`.
+Furthermore, we know that :math:`V_h` is finite dimensional and we can write down its basis, since we know the bases of :math:`P_1(K_k)`.
 Hence
 
 .. math::
@@ -196,7 +197,7 @@ This can also be written as a linear equation system
 .. math::
 
   \begin{bmatrix}
-    a\left(\phi_1,\phi_1 \right) & \cdots & a\left(\phi_{n_{DoFs},\phi_1} \right) \\
+    a\left(\phi_1,\phi_1 \right) & \cdots & a\left(\phi_{n_{DoFs}},\phi_1 \right) \\
     \vdots & \ddots & \vdots \\
     a\left(\phi_1,\phi_{n_{DoFs}} \right) & \cdots & a\left(\phi_{n_{DoFs}},\phi_{n_{DoFs}} \right)
   \end{bmatrix}
@@ -212,7 +213,86 @@ This can also be written as a linear equation system
     l(u_{n_{DoFs}})
   \end{bmatrix}.
 
-TODO: computing linear equation system , applying BC
+To remain consistent with future chapters, we follow the naming convention
+
+.. math::
+
+  A_h &:= \begin{bmatrix}
+    a\left(\phi_1,\phi_1 \right) & \cdots & a\left(\phi_{n_{DoFs}},\phi_1 \right) \\
+    \vdots & \ddots & \vdots \\
+    a\left(\phi_1,\phi_{n_{DoFs}} \right) & \cdots & a\left(\phi_{n_{DoFs}},\phi_{n_{DoFs}} \right)
+  \end{bmatrix}, \\
+  x_h &:= \begin{bmatrix}
+    u_1\\
+    \vdots\\
+    u_{n_{DoFs}}
+  \end{bmatrix}  \quad \text{ and } \\
+  b_h &:= \begin{bmatrix}
+    l(u_1)\\
+    \vdots\\
+    l(u_{n_{DoFs}})
+  \end{bmatrix}.
+
+To be able to solve :math:`A_h x_h = b_h`, we need an efficient way to compute :math:`a\left(\phi_i,\phi_j \right)` and :math:`l\left(\phi_j \right)`.
+For that we use that :math:`\Omega = \cup_{k = 1}^{n_{DoFs}}K_k` and we thus get
+
+.. math::
+
+  a(\phi_i,\phi_j) &= \int_{\Omega} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{\Omega} c \phi_i \cdot \phi_j\ dx \\
+                  &= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{K_k} c \phi_i \cdot \phi_j\ dx  \right),
+
+similarly we get for the right hand functional
+
+.. math::
+
+  l(\phi_j) &= \int_{\Omega} f \cdot \phi_j\ dx \\
+            &= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} f \cdot \phi_j\ dx \right).
+
+Note that many of these integrals are zero, since the basis functions :math:`\phi_i` only have support on the triangles that contain the vertex corresponding
+to the i.th degree of freedom. Furthermore, we use the isoparametric concept that allows us to assemble the :blue:`system matrix` :math:`A_h` and :blue:`right side` :math:`b_h`
+by once computing integrals on a reference element :math:`\hat{K}` and then transforming the results to the elements :math:`K_k`.
+
+.. figure:: img/trafo.png
+    :alt: trafo
+    :align: center
+
+.. centered:: Figure 2: Transformation from reference element to finite element
+
+We now apply the transformation theorem
+
+.. math::
+
+  \int_{\hat{K}} g\left(\hat{x}\right)\ d\hat{x} = \int_{K_k} g\left(T_k^{-1}(x)\right)\left|\det\left(\nabla T_k^{-1}(x)\right)\right|\ dx
+
+to all integrals that need to be evaluated in the discrete weak form.
+
+.. elaborate on this section
+
+Then the algorithm for the assembly is given by
+
+.. figure:: img/assembly.png
+    :alt: assembly
+    :align: center
+
+At the end of the assembly, we need to account for the Dirichlet boundary constraints, e.g. let a constraint :math:`u_{\tau} = \xi` be given.
+Then we would need to make sure that :math:`(A_h)_{\tau,j} = \delta_{\tau,j}` for all :math:`1 \leq j \leq m`.
+Here :math:`\delta_{\tau,j}` denotes the Kronecker delta, which is defined as
+
+.. math::
+
+  \delta_{\tau,j} := \begin{cases}
+    1 & \text{for } j = \tau \\
+    0 & \text{for } j \neq \tau
+    \end{cases}.
+
+Futhermore, we would need to set :math:`(b_h)_{\tau} = \xi`.
+Obviously these steps ensure that when solving the linear system :math:`A_h x_h = b_h`,
+we get :math:`u_{\tau} = \xi`. In our model problem, we only have homogeneous Dirichlet constraints.
+Thus, we only need to find all indices :math:`\tau` at the Dirichlet boundary :math:`\Gamma_D`
+and apply the procedure from above with :math:`\xi = 0`.
+
+Overall, the Finite Element Method enabled us to transform a discrete form of the convection-diffusion equation
+on a given grid into a linear equation system. In the following, we will investigate how such a linear equation system can be solved iteratively.
 
 Iterative Methods
 ^^^^^^^^^^^^^^^^^
@@ -230,7 +310,7 @@ The grid consists of objects of type :code:`Node`, :code:`Edge` and :code:`Trian
     :alt: coarse_grid
     :align: center
 
-.. centered:: Figure 2: Coarse grid (:math:`\mathbb{T}_0`)
+.. centered:: Figure 3: Coarse grid (:math:`\mathbb{T}_0`)
 
 For the multigrid method, we need a sequence of such grids.
 In this work, we restrict our analysis to uniformly refined meshes.
@@ -241,10 +321,10 @@ and then refine them.
     :alt: triangle_refinement
     :align: center
 
-.. centered:: Figure 3: Refining a triangle
+.. centered:: Figure 4: Refining a triangle
 
 To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
-As shown in figure 3, through the refinement process a triangle is being divided
+As shown in figure 4, through the refinement process a triangle is being divided
 into four smaller triangles. Each :code:`Node` object needs to know its parent nodes.
 The parents are two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
 In the literature [1] these relationships are being stored in a father-son list.
@@ -258,7 +338,7 @@ refine the coarse grid to construct that grid.
     :alt: grid_level_1
     :align: center
 
-.. centered:: Figure 4: Grid on level 1 (:math:`\mathbb{T}_1`)
+.. centered:: Figure 5: Grid on level 1 (:math:`\mathbb{T}_1`)
 
 We continue the process of refining the grid, until we end up with a grid, which has enough nodes
 to ensure that a sufficiently good approximation to the exact solution can be computed.
@@ -267,7 +347,7 @@ to ensure that a sufficiently good approximation to the exact solution can be co
     :alt: grid_level_2
     :align: center
 
-.. centered:: Figure 5: Grid on level 2 (:math:`\mathbb{T}_2`)
+.. centered:: Figure 6: Grid on level 2 (:math:`\mathbb{T}_2`)
 
 The grid on the highest level, in this case :math:`\mathbb{T}_2` or more generally :math:`\mathbb{T}_L`, is called the finest grid
 and will be used to assemble the system matrix.
@@ -354,7 +434,7 @@ For :math:`\mu = 1` we get the V-cycle
    }
 
 
-.. centered:: Figure 6: V-cycle
+.. centered:: Figure 7: V-cycle
 
 and for :math:`\mu = 2` we get the W-cycle.
 
@@ -413,7 +493,7 @@ and for :math:`\mu = 2` we get the W-cycle.
    \draw[->] (N) to (O);
    }
 
-.. centered:: Figure 7: W-cycle
+.. centered:: Figure 8: W-cycle
 
 In the figures of these schemes, white circles stand for :math:`\nu` steps of an iterative solver,
 black circles represent a direct solver, blue arrows illustrate a restriction and green arrows illustrate a prolongation.
@@ -463,7 +543,7 @@ it is helpful to a see how the the grid transfer works for one dimensional linea
       :alt: grid_transfer
       :align: center
 
-  .. centered:: Figure 8: Basis functions on the first two levels
+  .. centered:: Figure 9: Basis functions on the first two levels
 
   It holds
 
