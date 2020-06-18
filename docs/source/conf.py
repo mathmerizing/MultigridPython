@@ -36,9 +36,15 @@ extensions = [
 "sphinx_rtd_theme",
  "sphinx.ext.mathjax",
 'sphinxcontrib.tikz',
+'sphinx.ext.imgconverter',
  "nbsphinx"
 ]
-latex_preamble=r'\usepackage{xcolor}'
+latex_preamble=r'\usepackage{xcolor}',
+
+latex_elements = {
+'preamble': '\\usepackage{tikz}',
+'preamble': '\\usepackage{svg}',
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

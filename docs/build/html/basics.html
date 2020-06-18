@@ -197,7 +197,7 @@
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>In the following, we are describing the <span class="blue">geometric multigrid method</span>,
 which for certain problems yields an iterative solver
-with optimal time complexity, i.e. the solver returns a solution to a PDE in
+with optimal cost complexity, i.e. the solver returns a solution to a PDE in
 <span class="math notranslate nohighlight">\(O(n_{\text{DoFs}})\)</span> arithmetic operations. We will show that this can also
 be achieved for some convection-diffusion equations on uniformly refined triangular
 meshes, when discretizing with linear finite elements.</p>
@@ -222,7 +222,8 @@ Further, we need a right hand side function</p>
    1 &amp; \text{for } x \in (0,1) \times (-1,0) \\
 \end{cases}.\end{split}\]</div>
 <div class="figure align-center">
-<img alt="domain" src="_images/domain.svg" /></div>
+<img alt="domain" src="_images/domain.png" />
+</div>
 <p class="centered">
 <strong>Figure 1: Domain <span class="math notranslate nohighlight">\(\Omega\)</span></strong></p><p>Using the parameters <span class="math notranslate nohighlight">\(a = 1\)</span> and <span class="math notranslate nohighlight">\(c = 0\)</span> in <span class="math notranslate nohighlight">\(\Omega\)</span>, we can now
 formulate the strong form of our convection diffusion equation:</p>
@@ -367,12 +368,13 @@ by once computing integrals on a reference element <span class="math notranslate
 <p class="centered">
 <strong>Figure 2: Transformation from reference element to finite element</strong></p><p>We now apply the transformation theorem</p>
 <div class="math notranslate nohighlight">
-\[\int_{\hat{K}} g\left(\hat{x}\right)\ d\hat{x} = \int_{K_k} g\left(T_k^{-1}(x)\right)\left|\det\left(\nabla T_k^{-1}(x)\right)\right|\ dx\]</div>
+\[\int_{\hat{K}} g\left(T_k\left(\hat{x}\right)\right)\left|\det\left(\nabla T_k\left(\hat{x}\right)\right)\right|\ d\hat{x} = \int_{K_k} g\left(x\right)\ dx\]</div>
 <p>to all integrals that need to be evaluated in the discrete weak form.</p>
 <p>Then the algorithm for the assembly is given by</p>
 <div class="figure align-center">
 <img alt="assembly" src="_images/assembly.png" />
 </div>
+<p>where <span class="math notranslate nohighlight">\(\hat{\phi}_i = \phi_i \circ T_k\)</span> are the basis functions on the reference element.</p>
 <p>At the end of the assembly, we need to account for the Dirichlet boundary constraints, e.g. let a constraint <span class="math notranslate nohighlight">\(u_{\tau} = \xi\)</span> be given.
 Then we would need to make sure that <span class="math notranslate nohighlight">\((A_h)_{\tau,j} = \delta_{\tau,j}\)</span> for all <span class="math notranslate nohighlight">\(1 \leq j \leq m\)</span>.
 Here <span class="math notranslate nohighlight">\(\delta_{\tau,j}\)</span> denotes the Kronecker delta, which is defined as</p>
@@ -391,7 +393,43 @@ on a given grid into a linear equation system. In the following, we will investi
 </div>
 <div class="section" id="iterative-methods">
 <h2>Iterative Methods<a class="headerlink" href="#iterative-methods" title="Permalink to this headline">¶</a></h2>
-<p>TODO !!!</p>
+<p>We want to construct an iteration, where each iterate <span class="math notranslate nohighlight">\(x_k^{k}\)</span> is a better approximation to the linear equation system <span class="math notranslate nohighlight">\(A_h x_h = b_h\)</span>.
+To measure the quality of our solution, we monitor the <span class="blue">defect</span></p>
+<div class="math notranslate nohighlight">
+\[b_h - A_h x_h\]</div>
+<p>and try to minimize it.
+One can try to formulate a fixed point scheme <span class="math notranslate nohighlight">\(x_h^{k+1} = g\left(x_h^{k}\right)\)</span> to solve the system of equations.
+The goal of the fixed point scheme is to find some input <span class="math notranslate nohighlight">\(x\)</span> such that <span class="math notranslate nohighlight">\(g(x) = x\)</span>.
+In our case, we want the exact solution <span class="math notranslate nohighlight">\(x_h\)</span> to be a fixed point of our iteration.
+We observe that the defect of the exact solution is zero. Thus one might try to increment the old iterate <span class="math notranslate nohighlight">\(x_h\)</span>
+by some multiple of the defect. This is called the Richardson method. However, the Richardson method is rarely used in practice.
+Instead we will work with the more general fixed point scheme</p>
+<div class="math notranslate nohighlight">
+\[x_h^{k+1} = x_h^{k} + \omega C^{-1}\left(b_h - A_h x_h^{k} \right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(C \in \mathbb{R}^{n_{DoFs} \times n_{DoFs}}\)</span>. Here the type of method depends on the matrix <span class="math notranslate nohighlight">\(C\)</span>, e.g.
+<span class="math notranslate nohighlight">\(C = I\)</span> is the Richardson method. In our code, we implemented</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(C = D\)</span> which is the <span class="math notranslate nohighlight">\(\omega\)</span>-<span class="blue">Jacobi</span> method,</p></li>
+<li><p><span class="math notranslate nohighlight">\(C = \left( D + L \right)\)</span> which is the  <span class="blue">Forward Gauss-Seidel</span> method for <span class="math notranslate nohighlight">\(\omega = 1\)</span>,</p></li>
+<li><p><span class="math notranslate nohighlight">\(C = \left( D + U \right)\)</span> which is the  <span class="blue">Backward Gauss-Seidel</span> method for <span class="math notranslate nohighlight">\(\omega = 1\)</span>.</p></li>
+</ul>
+<p>In these definitions, we used the decomposition  <span class="math notranslate nohighlight">\(A_h = L + D + U\)</span>, where <span class="math notranslate nohighlight">\(L\)</span> has only nonzero entries below the diagonal (strictly lower triangular matrix),
+<span class="math notranslate nohighlight">\(D\)</span> has only nonzero entries on the diagonal (diagonal matrix) and <span class="math notranslate nohighlight">\(U\)</span> has only nonzero entries above the diagonal (strictly upper triangular matrix).</p>
+<p>Note that we need to compute the inverse matrix <span class="math notranslate nohighlight">\(C^{-1}\)</span>. This can be easily done for <span class="math notranslate nohighlight">\(\omega\)</span>-Jacobi,
+since we just invert the diagonal. It wouldn’t be efficient to invert <span class="math notranslate nohighlight">\(\left( D + L \right)\)</span> or <span class="math notranslate nohighlight">\(\left( D + U \right)\)</span> directly.
+Hence we use the formula</p>
+<div class="math notranslate nohighlight">
+\[x_i^k = \frac{1}{a_{ii}}\left( b_i - \sum_{j &lt; i}a_{ij}x_j^k - \sum_{j &gt; i}a_{ij}x_j^{k-1} \right) \quad \text{for } i = 1, \dots n_{DoFs}\]</div>
+<p>for Forward Gauss-Seidel and the formula</p>
+<div class="math notranslate nohighlight">
+\[x_i^k = \frac{1}{a_{ii}}\left( b_i - \sum_{j &lt; i}a_{ij}x_j^{k-1} - \sum_{j &gt; i}a_{ij}x_j^{k} \right) \quad \text{for } i = n_{DoFs},  \dots, 1\]</div>
+<p>for Backward Gauss-Seidel. In these formulas, we used the notation <span class="math notranslate nohighlight">\(a_{ij} := (A_h)_{ij}\)</span>, <span class="math notranslate nohighlight">\(b_{i} := (b_h)_{i}\)</span> and <span class="math notranslate nohighlight">\(x_i^{k} := (x_h^{k})_i\)</span>.</p>
+<p>Which of these iterative methods should be used in numerical computations? It depends!
+<span class="math notranslate nohighlight">\(\omega\)</span>-Jacobi has the benefit of being fast, since it can be parallelized.
+Nevertheless, it needs more iterations to converge than Gauss-Seidel and one needs to choose a good value for <span class="math notranslate nohighlight">\(\omega\)</span> before computation.
+Although the Gauss-Seidel methods converge in less iterations, they need longer for the computation, since the for loops need to be executed sequentially.</p>
+<p>In the next few sections, we will show how <span class="math notranslate nohighlight">\(\omega\)</span>-Jacobi and Gauss-Seidel can be used in the multigrid method,
+resulting in a fast solver for the linear equation system derived from a discrete weak form of the convection-diffusion equation.</p>
 </div>
 <div class="section" id="grid-setup">
 <h2>Grid Setup<a class="headerlink" href="#grid-setup" title="Permalink to this headline">¶</a></h2>
@@ -400,14 +438,16 @@ we first need to discretize our domain. For that purpose, we create an initial t
 i.e. we divide <span class="math notranslate nohighlight">\(\Omega\)</span> into a set of triangles. We call this triangulation the <span class="blue">coarse grid</span> and denote it as <span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>.
 The grid consists of objects of type <code class="code docutils literal notranslate"><span class="pre">Node</span></code>, <code class="code docutils literal notranslate"><span class="pre">Edge</span></code> and <code class="code docutils literal notranslate"><span class="pre">Triangle</span></code>.</p>
 <div class="figure align-center">
-<img alt="coarse_grid" src="_images/CoarseGrid.svg" /></div>
+<img alt="coarse_grid" src="_images/CoarseGrid.png" />
+</div>
 <p class="centered">
 <strong>Figure 3: Coarse grid (<span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>)</strong></p><p>For the multigrid method, we need a sequence of such grids.
 In this work, we restrict our analysis to uniformly refined meshes.
 How can we create these refined meshes? We have to loop over all triangles of the grid
 and then refine them.</p>
 <div class="figure align-center">
-<img alt="triangle_refinement" src="_images/triangle_refinement.svg" /></div>
+<img alt="triangle_refinement" src="_images/triangle_refinement.png" />
+</div>
 <p class="centered">
 <strong>Figure 4: Refining a triangle</strong></p><p>To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
 As shown in figure 4, through the refinement process a triangle is being divided
@@ -419,12 +459,14 @@ This is not needed in our case, due to Object Oriented Programming (OOP).</p>
 which is called the grid on level 1. The <span class="blue">level</span> of a grid indicates how often we need to (globally)
 refine the coarse grid to construct that grid.</p>
 <div class="figure align-center">
-<img alt="grid_level_1" src="_images/GridLevel1.svg" /></div>
+<img alt="grid_level_1" src="_images/GridLevel1.png" />
+</div>
 <p class="centered">
 <strong>Figure 5: Grid on level 1 (<span class="math notranslate nohighlight">\(\mathbb{T}_1\)</span>)</strong></p><p>We continue the process of refining the grid, until we end up with a grid, which has enough nodes
 to ensure that a sufficiently good approximation to the exact solution can be computed.</p>
 <div class="figure align-center">
-<img alt="grid_level_2" src="_images/GridLevel2.svg" /></div>
+<img alt="grid_level_2" src="_images/GridLevel2.png" />
+</div>
 <p class="centered">
 <strong>Figure 6: Grid on level 2 (<span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span>)</strong></p><p>The grid on the highest level, in this case <span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span> or more generally <span class="math notranslate nohighlight">\(\mathbb{T}_L\)</span>, is called the finest grid
 and will be used to assemble the system matrix.</p>
@@ -656,6 +698,7 @@ but here <span class="red">all Dirichlet boundary conditions are set to be homog
 <li><p>Dietrich Braess. <em>Finite Elemente.</em> Springer Berlin Heidelberg, 2013. DOI: 10.1007/978-3-642-34797-9. URL: <a class="reference external" href="https://doi.org/10.1007%2F978-3-642-34797-9">https://doi.org/10.1007%2F978-3-642-34797-9</a>.</p></li>
 <li><p>Chao Chen. “Geometric multigrid for eddy current problems”. PhD thesis. 2012.</p></li>
 <li><p>Julian Roth. “Geometric Multigrid Methods for Maxwell’s Equations”. Bachelor thesis. 2020.</p></li>
+<li><p>Thomas Richter and Thomas Wick. Einführung in die numerische Mathematik - Begriffe, Konzepte und zahlreiche Anwendungsbeispiele. Springer, 2017.</p></li>
 </ol>
 </div>
 </div>

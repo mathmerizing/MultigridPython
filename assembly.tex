@@ -80,8 +80,11 @@
 \begin{lstlisting}[mathescape=true]
 for <@\textcolor{black!40!green}{triangle}@> $K$ in grid.triangles:
 	for <@\textcolor{black!40!green}{DoF}@> $\phi_i$ in $K$.dofs:
-		$b_h$[$\phi_i$.globalIndex] += $f \left|\det\left(\nabla T_K^{-1}(x)\right)\right| \int_{K} \phi_i\ dx$
+		$b_h$[$\phi_i$.globalIndex] += $f \int_{\hat{K}} \hat{\phi}_i \left|\det\left(\hat{\nabla} T_K(\hat{x})\right)\right|\ d\hat{x}$
 		for <@\textcolor{black!40!green}{DoF}@> $\phi_j$ in $K$.dofs:
-			$A_h$[$\phi_i$.globalIndex, $\phi_j$.globalIndex] += $\int_{K}$
+			$A_h$[$\phi_i$.globalIndex, $\phi_j$.globalIndex] += (
+				$a \int_{\hat{K}} \left(\hat{\nabla} T_K\left(\hat{x}\right)^{-T}\hat{\nabla}\hat{\phi}_i \right) \cdot \left(\hat{\nabla} T_K\left(\hat{x}\right)^{-T}\hat{\nabla}\hat{\phi}_j \right) \left|\det\left(\hat{\nabla} T_K(\hat{x})\right)\right|\ d\hat{x}$ +
+				$c \int_{\hat{K}} \hat{\phi}_i \cdot  \hat{\phi}_j \left|\det\left(\hat{\nabla} T_K(\hat{x})\right)\right|\ d\hat{x}$
+			)
 \end{lstlisting}
 \end{document}

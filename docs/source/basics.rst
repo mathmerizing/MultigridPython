@@ -18,7 +18,7 @@ Introduction
 ^^^^^^^^^^^^
 In the following, we are describing the :blue:`geometric multigrid method`,
 which for certain problems yields an iterative solver
-with optimal time complexity, i.e. the solver returns a solution to a PDE in
+with optimal cost complexity, i.e. the solver returns a solution to a PDE in
 :math:`O(n_{\text{DoFs}})` arithmetic operations. We will show that this can also
 be achieved for some convection-diffusion equations on uniformly refined triangular
 meshes, when discretizing with linear finite elements.
@@ -262,7 +262,7 @@ We now apply the transformation theorem
 
 .. math::
 
-  \int_{\hat{K}} g\left(\hat{x}\right)\ d\hat{x} = \int_{K_k} g\left(T_k^{-1}(x)\right)\left|\det\left(\nabla T_k^{-1}(x)\right)\right|\ dx
+  \int_{\hat{K}} g\left(T_k\left(\hat{x}\right)\right)\left|\det\left(\nabla T_k\left(\hat{x}\right)\right)\right|\ d\hat{x} = \int_{K_k} g\left(x\right)\ dx
 
 to all integrals that need to be evaluated in the discrete weak form.
 
@@ -273,6 +273,8 @@ Then the algorithm for the assembly is given by
 .. figure:: img/assembly.png
     :alt: assembly
     :align: center
+
+where :math:`\hat{\phi}_i = \phi_i \circ T_k` are the basis functions on the reference element.
 
 At the end of the assembly, we need to account for the Dirichlet boundary constraints, e.g. let a constraint :math:`u_{\tau} = \xi` be given.
 Then we would need to make sure that :math:`(A_h)_{\tau,j} = \delta_{\tau,j}` for all :math:`1 \leq j \leq m`.
@@ -296,8 +298,57 @@ on a given grid into a linear equation system. In the following, we will investi
 
 Iterative Methods
 ^^^^^^^^^^^^^^^^^
-TODO !!!
+We want to construct an iteration, where each iterate :math:`x_k^{k}` is a better approximation to the linear equation system :math:`A_h x_h = b_h`.
+To measure the quality of our solution, we monitor the :blue:`defect`
 
+.. math::
+  b_h - A_h x_h
+
+and try to minimize it.
+One can try to formulate a fixed point scheme :math:`x_h^{k+1} = g\left(x_h^{k}\right)` to solve the system of equations.
+The goal of the fixed point scheme is to find some input :math:`x` such that :math:`g(x) = x`.
+In our case, we want the exact solution :math:`x_h` to be a fixed point of our iteration.
+We observe that the defect of the exact solution is zero. Thus one might try to increment the old iterate :math:`x_h`
+by some multiple of the defect. This is called the Richardson method. However, the Richardson method is rarely used in practice.
+Instead we will work with the more general fixed point scheme
+
+.. math::
+
+  x_h^{k+1} = x_h^{k} + \omega C^{-1}\left(b_h - A_h x_h^{k} \right)
+
+where :math:`C \in \mathbb{R}^{n_{DoFs} \times n_{DoFs}}`. Here the type of method depends on the matrix :math:`C`, e.g.
+:math:`C = I` is the Richardson method. In our code, we implemented
+
+* :math:`C = D` which is the :math:`\omega`-:blue:`Jacobi` method,
+* :math:`C = \left( D + L \right)` which is the  :blue:`Forward Gauss-Seidel` method for :math:`\omega = 1`,
+* :math:`C = \left( D + U \right)` which is the  :blue:`Backward Gauss-Seidel` method for :math:`\omega = 1`.
+
+In these definitions, we used the decomposition  :math:`A_h = L + D + U`, where :math:`L` has only nonzero entries below the diagonal (strictly lower triangular matrix),
+:math:`D` has only nonzero entries on the diagonal (diagonal matrix) and :math:`U` has only nonzero entries above the diagonal (strictly upper triangular matrix).
+
+Note that we need to compute the inverse matrix :math:`C^{-1}`. This can be easily done for :math:`\omega`-Jacobi,
+since we just invert the diagonal. It wouldn't be efficient to invert :math:`\left( D + L \right)` or :math:`\left( D + U \right)` directly.
+Hence we use the formula
+
+.. math::
+
+  x_i^k = \frac{1}{a_{ii}}\left( b_i - \sum_{j < i}a_{ij}x_j^k - \sum_{j > i}a_{ij}x_j^{k-1} \right) \quad \text{for } i = 1, \dots n_{DoFs}
+
+for Forward Gauss-Seidel and the formula
+
+.. math::
+
+  x_i^k = \frac{1}{a_{ii}}\left( b_i - \sum_{j < i}a_{ij}x_j^{k-1} - \sum_{j > i}a_{ij}x_j^{k} \right) \quad \text{for } i = n_{DoFs},  \dots, 1
+
+for Backward Gauss-Seidel. In these formulas, we used the notation :math:`a_{ij} := (A_h)_{ij}`, :math:`b_{i} := (b_h)_{i}` and :math:`x_i^{k} := (x_h^{k})_i`.
+
+Which of these iterative methods should be used in numerical computations? It depends!
+:math:`\omega`-Jacobi has the benefit of being fast, since it can be parallelized.
+Nevertheless, it needs more iterations to converge than Gauss-Seidel and one needs to choose a good value for :math:`\omega` before computation.
+Although the Gauss-Seidel methods converge in less iterations, they need longer for the computation, since the for loops need to be executed sequentially.
+
+In the next few sections, we will show how :math:`\omega`-Jacobi and Gauss-Seidel can be used in the multigrid method,
+resulting in a fast solver for the linear equation system derived from a discrete weak form of the convection-diffusion equation.
 
 Grid Setup
 ^^^^^^^^^^
@@ -614,3 +665,4 @@ References
 #. Dietrich Braess. *Finite Elemente.* Springer Berlin Heidelberg, 2013. DOI: 10.1007/978-3-642-34797-9. URL: `https://doi.org/10.1007%2F978-3-642-34797-9 <https://doi.org/10.1007%2F978-3-642-34797-9>`__.
 #. Chao Chen. "Geometric multigrid for eddy current problems". PhD thesis. 2012.
 #. Julian Roth. "Geometric Multigrid Methods for Maxwell's Equations". Bachelor thesis. 2020.
+#. Thomas Richter and Thomas Wick. Einführung in die numerische Mathematik - Begriffe, Konzepte und zahlreiche Anwendungsbeispiele. Springer, 2017.
