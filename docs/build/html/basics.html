@@ -222,8 +222,7 @@ Further, we need a right hand side function</p>
    1 &amp; \text{for } x \in (0,1) \times (-1,0) \\
 \end{cases}.\end{split}\]</div>
 <div class="figure align-center">
-<img alt="domain" src="_images/domain.png" />
-</div>
+<img alt="domain" src="_images/domain.svg" /></div>
 <p class="centered">
 <strong>Figure 1: Domain <span class="math notranslate nohighlight">\(\Omega\)</span></strong></p><p>Using the parameters <span class="math notranslate nohighlight">\(a = 1\)</span> and <span class="math notranslate nohighlight">\(c = 0\)</span> in <span class="math notranslate nohighlight">\(\Omega\)</span>, we can now
 formulate the strong form of our convection diffusion equation:</p>
@@ -438,16 +437,14 @@ we first need to discretize our domain. For that purpose, we create an initial t
 i.e. we divide <span class="math notranslate nohighlight">\(\Omega\)</span> into a set of triangles. We call this triangulation the <span class="blue">coarse grid</span> and denote it as <span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>.
 The grid consists of objects of type <code class="code docutils literal notranslate"><span class="pre">Node</span></code>, <code class="code docutils literal notranslate"><span class="pre">Edge</span></code> and <code class="code docutils literal notranslate"><span class="pre">Triangle</span></code>.</p>
 <div class="figure align-center">
-<img alt="coarse_grid" src="_images/CoarseGrid.png" />
-</div>
+<img alt="coarse_grid" src="_images/CoarseGrid.svg" /></div>
 <p class="centered">
 <strong>Figure 3: Coarse grid (<span class="math notranslate nohighlight">\(\mathbb{T}_0\)</span>)</strong></p><p>For the multigrid method, we need a sequence of such grids.
 In this work, we restrict our analysis to uniformly refined meshes.
 How can we create these refined meshes? We have to loop over all triangles of the grid
 and then refine them.</p>
 <div class="figure align-center">
-<img alt="triangle_refinement" src="_images/triangle_refinement.png" />
-</div>
+<img alt="triangle_refinement" src="_images/triangle_refinement.svg" /></div>
 <p class="centered">
 <strong>Figure 4: Refining a triangle</strong></p><p>To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
 As shown in figure 4, through the refinement process a triangle is being divided
@@ -459,14 +456,12 @@ This is not needed in our case, due to Object Oriented Programming (OOP).</p>
 which is called the grid on level 1. The <span class="blue">level</span> of a grid indicates how often we need to (globally)
 refine the coarse grid to construct that grid.</p>
 <div class="figure align-center">
-<img alt="grid_level_1" src="_images/GridLevel1.png" />
-</div>
+<img alt="grid_level_1" src="_images/GridLevel1.svg" /></div>
 <p class="centered">
 <strong>Figure 5: Grid on level 1 (<span class="math notranslate nohighlight">\(\mathbb{T}_1\)</span>)</strong></p><p>We continue the process of refining the grid, until we end up with a grid, which has enough nodes
 to ensure that a sufficiently good approximation to the exact solution can be computed.</p>
 <div class="figure align-center">
-<img alt="grid_level_2" src="_images/GridLevel2.png" />
-</div>
+<img alt="grid_level_2" src="_images/GridLevel2.svg" /></div>
 <p class="centered">
 <strong>Figure 6: Grid on level 2 (<span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span>)</strong></p><p>The grid on the highest level, in this case <span class="math notranslate nohighlight">\(\mathbb{T}_2\)</span> or more generally <span class="math notranslate nohighlight">\(\mathbb{T}_L\)</span>, is called the finest grid
 and will be used to assemble the system matrix.</p>
