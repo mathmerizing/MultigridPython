@@ -4,10 +4,12 @@ from main import saveVtk, analyzeSolution
 
 import time
 import math
+from math import log
 import logging
 from functools import wraps
 import numpy as np
 from scipy.sparse.linalg import spsolve, inv
+
 
 # get current time in milliseconds
 millis = lambda: int(round(time.time() * 1000))
@@ -172,11 +174,13 @@ class Multigrid():
         iterations = maxIter
 
         solverStart = millis()
+        self.defects = []
 
         for iter in range(maxIter):
             # log defect before iteration
             normOfDefect = np.linalg.norm(self.defect(self.levelRHS[-1], solution, self.numberLevels - 1))
             logging.debug(f"{iter}.th defect: {normOfDefect}")
+            self.defects.append(normOfDefect)
 
             # solution accurate enough
             if  normOfDefect < epsilon:
@@ -185,9 +189,22 @@ class Multigrid():
 
             solution = self.mgm(solution, self.levelRHS[-1], self.numberLevels - 1, mu, preSmoother, postSmoother, preSmoothSteps, postSmoothSteps, epsilon)
 
-        logging.info(f"Defect:         {round(normOfDefect, 2-int(math.floor(math.log10(abs(normOfDefect)))))}")
-        logging.info(f"GMG iterations: {iterations}")
-        logging.info(f"Multigrid time: {(millis()-solverStart) / 1000} s")
+        logging.info(f"Defect:           {round(normOfDefect, 2-int(math.floor(math.log10(abs(normOfDefect)))))}")
+        logging.info(f"GMG iterations:   {iterations}")
+        logging.info(f"Multigrid time:   {(millis()-solverStart) / 1000} s")
+        logging.debug(f"Defects: {self.defects}")
+        logging.info(f"Convergence rate: {round(self.convergenceRate(),4)}")
         saveVtk(solution, self.grids[-1])
 
         return solution, iterations
+
+
+    def convergenceRate(self):
+        vals   = [d**2 for d in self.defects]
+        orders = []
+
+        for i in range(len(vals)-3):
+            orders.append(log(abs((vals[i+3]-vals[i+2])/(vals[i+2]-vals[i+1])))/log(abs((vals[i+2]-vals[i+1])/(vals[i+1]-vals[i]))))
+
+        logging.debug(f"Orders: {orders}")
+        return sum(orders)/len(orders)
