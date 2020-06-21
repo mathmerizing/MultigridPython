@@ -83,14 +83,56 @@ def getLocalMatrices(degree = 1):
 
         return [K_xx, K_xy, K_yy], M
 
-
-def assembleSystem(grid, K, M):
+def assembleSystemSequential(grid, K, M):
     """
     Assemble system matrix and right hand side with the help of the local matrices
     and the information stored in the grid.
     """
+    numDofs = len(grid.dofs)
+    systemMatrix    = dok_matrix((numDofs,numDofs), dtype=np.float32)
+    systemRightHand = np.zeros(numDofs, dtype=np.float32)
+
+    for triangle in grid.triangles:
+        # get all important triangle/ material parameters
+        detJ, G = triangle.jacobi()
+        # note: G = J^{-1} * J^{-T}
+        a       = triangle.material.get("a")
+        c       = triangle.material.get("c")
+        f       = triangle.material.get("f")
+        numLocalDofs = len(triangle.dofs)
+
+        # assemble cell matrix and cell right hand side
+        cellMatrix    = np.zeros((numLocalDofs, numLocalDofs), dtype=np.float32)
+        cellRightHand = np.zeros(numLocalDofs, dtype=np.float32)
+
+        # compute cellMatrix
+        diffusionMatrix = a * (G[0,0]*K[0] + G[0,1]*K[1] + G[1,0]*K[1].T + G[1,1]*K[2])
+        reactionMatrix  = c * M * detJ
+        cellMatrix = diffusionMatrix + reactionMatrix
+
+        # compute cellRightHand
+        cellRightHand = f * detJ * np.sum(M, axis = 1)
+
+        # write local to global matrix
+        for i, firstDof in enumerate(triangle.dofs):
+            systemRightHand[firstDof.ind] += cellRightHand[i]
+            for j, secondDof in enumerate(triangle.dofs):
+                systemMatrix[firstDof.ind, secondDof.ind] += cellMatrix[i,j]
+
+    return systemMatrix.tocsr(), systemRightHand
+
+def assembleSystem(grid, K, M):
+    """
+    This is a multiprocessing version of assembleSystemSequential, if OS is Linux.
+    """
     global processChunk
     import multiprocessing as mp
+    import platform
+
+    # if OS is NOT Linux, then fork and multiprocessing does not work properly
+    if platform.system() != "Linux":
+        return assembleSystemSequential(grid, K, M)
+
     # source (parallelization): https://datascience.blog.wzb.eu/2018/02/02/vectorization-and-parallelization-in-python-with-numpy-and-pandas/
     numCpu = mp.cpu_count()
     chunks = np.array_split(range(len(grid.triangles)), numCpu)
