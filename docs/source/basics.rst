@@ -377,7 +377,7 @@ and then refine them.
 To refine a triangle one simply needs to bisect all of its edges and draw a new triangle out of these three new nodes.
 As shown in figure 4, through the refinement process a triangle is being divided
 into four smaller triangles. Each :code:`Node` object needs to know its parent nodes.
-The parents are two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
+The parents are the two end nodes of the edge that has been bisected, e.g. node 1 and node 2 are the parents of node 4.
 In the literature [1] these relationships are being stored in a father-son list.
 This is not needed in our case, due to Object Oriented Programming (OOP).
 

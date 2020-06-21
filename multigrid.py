@@ -171,6 +171,8 @@ class Multigrid():
         solution  = startVector
         iterations = maxIter
 
+        solverStart = millis()
+
         for iter in range(maxIter):
             # log defect before iteration
             normOfDefect = np.linalg.norm(self.defect(self.levelRHS[-1], solution, self.numberLevels - 1))
@@ -185,6 +187,7 @@ class Multigrid():
 
         logging.info(f"Defect:         {round(normOfDefect, 2-int(math.floor(math.log10(abs(normOfDefect)))))}")
         logging.info(f"GMG iterations: {iterations}")
+        logging.info(f"Multigrid time: {(millis()-solverStart) / 1000} s")
         saveVtk(solution, self.grids[-1])
 
         return solution, iterations
