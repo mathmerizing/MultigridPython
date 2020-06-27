@@ -559,7 +559,7 @@ Let :math:`\left\{\varphi_1^l, \dots, \varphi_{n_{l}}^l\right\}` and
 :math:`\left\{\varphi_1^{l-1}, \dots, \varphi_{n_{l-1}}^{l-1}\right\}` be some given bases of
 :math:`V^l` and :math:`V^{l-1}`.
 Due to the conformity of the finite element spaces,
-:math:`V^{l-1} \subset V^l` holds and there exists a matrix :math:`I^{l-1}_l \in \mathbb{R}^{n_{-1} \times n_l}`
+:math:`V^{l-1} \subset V^l` holds and there exists a matrix :math:`I^{l-1}_l \in \mathbb{R}^{n_{l-1} \times n_l}`
 such that
 
 .. math::
