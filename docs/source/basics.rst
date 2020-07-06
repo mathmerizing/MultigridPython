@@ -20,7 +20,7 @@ In the following, we are describing the :blue:`geometric multigrid method`,
 which for certain problems yields an iterative solver
 with optimal cost complexity, i.e. the solver returns a solution to a PDE in
 :math:`O(n_{\text{DoFs}})` arithmetic operations. We will show that this can also
-be achieved for some convection-diffusion equations on uniformly refined triangular
+be achieved for some reaction-diffusion equations on uniformly refined triangular
 meshes, when discretizing with linear finite elements.
 
 Problem setup
@@ -57,7 +57,7 @@ Further, we need a right hand side function
 .. centered:: Figure 1: Domain :math:`\Omega`
 
 Using the parameters :math:`a = 1` and :math:`c = 0` in :math:`\Omega`, we can now
-formulate the strong form of our convection diffusion equation:
+formulate the strong form of our reaction-diffusion equation:
 
 .. admonition:: Strong form
 
@@ -76,18 +76,18 @@ Therefore we multiply (1) from the right with a test function :math:`v \in V` an
 .. math::
 
    -\int_{\Omega} \left(\nabla \cdot \left( a \nabla u\right)\right) \cdot v\ dx
-   + \int_{\Omega} c u \cdot v\ dx
-   = \int_{\Omega} f \cdot v\ dx \quad \forall v \in V
+   + \int_{\Omega} c u v\ dx
+   = \int_{\Omega} f v\ dx \quad \forall v \in V
 
 Now integration of parts can be applied to the first integral and we use the fact that :math:`\partial \Omega = \Gamma_D\ \dot\cup\ \Gamma_N`.
 
 .. math::
 
    \int_{\Omega} a \nabla u \cdot \nabla v\ dx
-   -\int_{\Gamma_D} a \partial_n u \cdot v\ ds
-   -\int_{\Gamma_N} a \partial_n u \cdot v\ ds \\
-   + \int_{\Omega} c u \cdot v\ dx
-   = \int_{\Omega} f \cdot v\ dx \quad \forall v \in V
+   -\int_{\Gamma_D} a \partial_n u  v\ ds
+   -\int_{\Gamma_N} a \partial_n u  v\ ds \\
+   + \int_{\Omega} c u v\ dx
+   = \int_{\Omega} f v\ dx \quad \forall v \in V
 
 Note that the integrals over the boundaries :math:`\Gamma_D` and :math:`\Gamma_N` vanish,
 since :math:`\partial_n u = 0` on :math:`\Gamma_N` and, due to :math:`v \in V`, :math:`u = 0` on :math:`\Gamma_D`.
@@ -106,13 +106,13 @@ which is often referred to as the weak or variational form in the literature.
 
   .. math::
 
-    a(u,v) := \int_{\Omega} a \nabla u \cdot \nabla v\ dx + \int_{\Omega} c u \cdot v\ dx
+    a(u,v) := \int_{\Omega} a \nabla u \cdot \nabla v\ dx + \int_{\Omega} c u v\ dx
 
   and the right hand side :math:`l: V \rightarrow \mathbb{R}` is a linear form defined as
 
   .. math::
 
-    l(v) := \int_{\Omega} f \cdot v\ dx
+    l(v) := \int_{\Omega} f v\ dx
 
 
 Furthermore using the fundamental lemma of calculus of variations, it can be shown that the strong and the weak form
@@ -186,7 +186,7 @@ Since :math:`a` is linear in the second argument and :math:`l` is also linear, i
 
   a\left(\sum_{i= 0}^{n_{DoFs}} u_i \phi_i,\phi_j \right) = l\left(\phi_j \right) \quad \forall 1 \leq j \leq n_{DoFs}.
 
-The convection-diffusion problem is linear itself, thus :math:`a` is also linear in the first argument and we get
+The reaction-diffusion problem is linear itself, thus :math:`a` is also linear in the first argument and we get
 
 .. math::
 
@@ -238,15 +238,15 @@ For that we use that :math:`\Omega = \cup_{k = 1}^{n_{DoFs}}K_k` and we thus get
 
 .. math::
 
-  a(\phi_i,\phi_j) &= \int_{\Omega} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{\Omega} c \phi_i \cdot \phi_j\ dx \\
-                  &= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{K_k} c \phi_i \cdot \phi_j\ dx  \right),
+  a(\phi_i,\phi_j) &= \int_{\Omega} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{\Omega} c \phi_i  \phi_j\ dx \\
+                  &= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{K_k} c \phi_i \phi_j\ dx  \right),
 
 similarly we get for the right hand functional
 
 .. math::
 
-  l(\phi_j) &= \int_{\Omega} f \cdot \phi_j\ dx \\
-            &= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} f \cdot \phi_j\ dx \right).
+  l(\phi_j) &= \int_{\Omega} f \phi_j\ dx \\
+            &= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} f  \phi_j\ dx \right).
 
 Note that many of these integrals are zero, since the basis functions :math:`\phi_i` only have support on the triangles that contain the vertex corresponding
 to the i.th degree of freedom. Furthermore, we use the isoparametric concept that allows us to assemble the :blue:`system matrix` :math:`A_h` and :blue:`right side` :math:`b_h`
@@ -293,7 +293,7 @@ we get :math:`u_{\tau} = \xi`. In our model problem, we only have homogeneous Di
 Thus, we only need to find all indices :math:`\tau` at the Dirichlet boundary :math:`\Gamma_D`
 and apply the procedure from above with :math:`\xi = 0`.
 
-Overall, the Finite Element Method enabled us to transform a discrete form of the convection-diffusion equation
+Overall, the Finite Element Method enabled us to transform a discrete form of the reaction-diffusion equation
 on a given grid into a linear equation system. In the following, we will investigate how such a linear equation system can be solved iteratively.
 
 Iterative Methods
@@ -348,7 +348,7 @@ Nevertheless, it needs more iterations to converge than Gauss-Seidel and one nee
 Although the Gauss-Seidel methods converge in less iterations, they need longer for the computation, since the for loops need to be executed sequentially.
 
 In the next few sections, we will show how :math:`\omega`-Jacobi and Gauss-Seidel can be used in the multigrid method,
-resulting in a fast solver for the linear equation system derived from a discrete weak form of the convection-diffusion equation.
+resulting in a fast solver for the linear equation system derived from a discrete weak form of the reaction-diffusion equation.
 
 Grid Setup
 ^^^^^^^^^^

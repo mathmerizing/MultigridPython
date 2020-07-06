@@ -199,7 +199,7 @@
 which for certain problems yields an iterative solver
 with optimal cost complexity, i.e. the solver returns a solution to a PDE in
 <span class="math notranslate nohighlight">\(O(n_{\text{DoFs}})\)</span> arithmetic operations. We will show that this can also
-be achieved for some convection-diffusion equations on uniformly refined triangular
+be achieved for some reaction-diffusion equations on uniformly refined triangular
 meshes, when discretizing with linear finite elements.</p>
 </div>
 <div class="section" id="problem-setup">
@@ -225,7 +225,7 @@ Further, we need a right hand side function</p>
 <img alt="domain" src="_images/domain.svg" /></div>
 <p class="centered">
 <strong>Figure 1: Domain <span class="math notranslate nohighlight">\(\Omega\)</span></strong></p><p>Using the parameters <span class="math notranslate nohighlight">\(a = 1\)</span> and <span class="math notranslate nohighlight">\(c = 0\)</span> in <span class="math notranslate nohighlight">\(\Omega\)</span>, we can now
-formulate the strong form of our convection diffusion equation:</p>
+formulate the strong form of our reaction-diffusion equation:</p>
 <div class="admonition-strong-form admonition">
 <p class="admonition-title">Strong form</p>
 <p>Find <span class="math notranslate nohighlight">\(u: \Omega \rightarrow \mathbb{R}\)</span> such that</p>
@@ -239,15 +239,15 @@ To be able to solve this problem, we need to convert it into its integral form.
 Therefore we multiply (1) from the right with a test function <span class="math notranslate nohighlight">\(v \in V\)</span> and integrate over <span class="math notranslate nohighlight">\(\Omega\)</span>.</p>
 <div class="math notranslate nohighlight">
 \[-\int_{\Omega} \left(\nabla \cdot \left( a \nabla u\right)\right) \cdot v\ dx
-+ \int_{\Omega} c u \cdot v\ dx
-= \int_{\Omega} f \cdot v\ dx \quad \forall v \in V\]</div>
++ \int_{\Omega} c u v\ dx
+= \int_{\Omega} f v\ dx \quad \forall v \in V\]</div>
 <p>Now integration of parts can be applied to the first integral and we use the fact that <span class="math notranslate nohighlight">\(\partial \Omega = \Gamma_D\ \dot\cup\ \Gamma_N\)</span>.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\int_{\Omega} a \nabla u \cdot \nabla v\ dx
--\int_{\Gamma_D} a \partial_n u \cdot v\ ds
--\int_{\Gamma_N} a \partial_n u \cdot v\ ds \\
-+ \int_{\Omega} c u \cdot v\ dx
-= \int_{\Omega} f \cdot v\ dx \quad \forall v \in V\end{split}\]</div>
+-\int_{\Gamma_D} a \partial_n u  v\ ds
+-\int_{\Gamma_N} a \partial_n u  v\ ds \\
++ \int_{\Omega} c u v\ dx
+= \int_{\Omega} f v\ dx \quad \forall v \in V\end{split}\]</div>
 <p>Note that the integrals over the boundaries <span class="math notranslate nohighlight">\(\Gamma_D\)</span> and <span class="math notranslate nohighlight">\(\Gamma_N\)</span> vanish,
 since <span class="math notranslate nohighlight">\(\partial_n u = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma_N\)</span> and, due to <span class="math notranslate nohighlight">\(v \in V\)</span>, <span class="math notranslate nohighlight">\(u = 0\)</span> on <span class="math notranslate nohighlight">\(\Gamma_D\)</span>.
 Thus we have derived the following integral problem of our problem,
@@ -259,10 +259,10 @@ which is often referred to as the weak or variational form in the literature.</p
 \[a(u,v) = l(v) \quad \forall v \in V\]</div>
 <p>where <span class="math notranslate nohighlight">\(a: V \times V \rightarrow \mathbb{R}\)</span> is the bilinear form defined as</p>
 <div class="math notranslate nohighlight">
-\[a(u,v) := \int_{\Omega} a \nabla u \cdot \nabla v\ dx + \int_{\Omega} c u \cdot v\ dx\]</div>
+\[a(u,v) := \int_{\Omega} a \nabla u \cdot \nabla v\ dx + \int_{\Omega} c u v\ dx\]</div>
 <p>and the right hand side <span class="math notranslate nohighlight">\(l: V \rightarrow \mathbb{R}\)</span> is a linear form defined as</p>
 <div class="math notranslate nohighlight">
-\[l(v) := \int_{\Omega} f \cdot v\ dx\]</div>
+\[l(v) := \int_{\Omega} f v\ dx\]</div>
 </div>
 <p>Furthermore using the fundamental lemma of calculus of variations, it can be shown that the strong and the weak form
 are equivalent. Hence it suffices to solve the weak form of the problem.</p>
@@ -311,7 +311,7 @@ Hence</p>
 <p>Since <span class="math notranslate nohighlight">\(a\)</span> is linear in the second argument and <span class="math notranslate nohighlight">\(l\)</span> is also linear, it is thus sufficient to solve</p>
 <div class="math notranslate nohighlight">
 \[a\left(\sum_{i= 0}^{n_{DoFs}} u_i \phi_i,\phi_j \right) = l\left(\phi_j \right) \quad \forall 1 \leq j \leq n_{DoFs}.\]</div>
-<p>The convection-diffusion problem is linear itself, thus <span class="math notranslate nohighlight">\(a\)</span> is also linear in the first argument and we get</p>
+<p>The reaction-diffusion problem is linear itself, thus <span class="math notranslate nohighlight">\(a\)</span> is also linear in the first argument and we get</p>
 <div class="math notranslate nohighlight">
 \[\sum_{i= 0}^{n_{DoFs}} u_i\ a\left(\phi_i,\phi_j \right) = l\left(\phi_j \right) \quad \forall 1 \leq j \leq n_{DoFs}.\]</div>
 <p>This can also be written as a linear equation system</p>
@@ -352,12 +352,12 @@ b_h &amp;:= \begin{bmatrix}
 <p>To be able to solve <span class="math notranslate nohighlight">\(A_h x_h = b_h\)</span>, we need an efficient way to compute <span class="math notranslate nohighlight">\(a\left(\phi_i,\phi_j \right)\)</span> and <span class="math notranslate nohighlight">\(l\left(\phi_j \right)\)</span>.
 For that we use that <span class="math notranslate nohighlight">\(\Omega = \cup_{k = 1}^{n_{DoFs}}K_k\)</span> and we thus get</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}a(\phi_i,\phi_j) &amp;= \int_{\Omega} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{\Omega} c \phi_i \cdot \phi_j\ dx \\
-                &amp;= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{K_k} c \phi_i \cdot \phi_j\ dx  \right),\end{split}\]</div>
+\[\begin{split}a(\phi_i,\phi_j) &amp;= \int_{\Omega} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{\Omega} c \phi_i  \phi_j\ dx \\
+                &amp;= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} a \nabla \phi_i \cdot \nabla \phi_j\ dx + \int_{K_k} c \phi_i \phi_j\ dx  \right),\end{split}\]</div>
 <p>similarly we get for the right hand functional</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}l(\phi_j) &amp;= \int_{\Omega} f \cdot \phi_j\ dx \\
-          &amp;= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} f \cdot \phi_j\ dx \right).\end{split}\]</div>
+\[\begin{split}l(\phi_j) &amp;= \int_{\Omega} f \phi_j\ dx \\
+          &amp;= \sum_{k = 1}^{n_{DoFs}} \left( \int_{K_k} f  \phi_j\ dx \right).\end{split}\]</div>
 <p>Note that many of these integrals are zero, since the basis functions <span class="math notranslate nohighlight">\(\phi_i\)</span> only have support on the triangles that contain the vertex corresponding
 to the i.th degree of freedom. Furthermore, we use the isoparametric concept that allows us to assemble the <span class="blue">system matrix</span> <span class="math notranslate nohighlight">\(A_h\)</span> and <span class="blue">right side</span> <span class="math notranslate nohighlight">\(b_h\)</span>
 by once computing integrals on a reference element <span class="math notranslate nohighlight">\(\hat{K}\)</span> and then transforming the results to the elements <span class="math notranslate nohighlight">\(K_k\)</span>.</p>
@@ -387,7 +387,7 @@ Obviously these steps ensure that when solving the linear system <span class="ma
 we get <span class="math notranslate nohighlight">\(u_{\tau} = \xi\)</span>. In our model problem, we only have homogeneous Dirichlet constraints.
 Thus, we only need to find all indices <span class="math notranslate nohighlight">\(\tau\)</span> at the Dirichlet boundary <span class="math notranslate nohighlight">\(\Gamma_D\)</span>
 and apply the procedure from above with <span class="math notranslate nohighlight">\(\xi = 0\)</span>.</p>
-<p>Overall, the Finite Element Method enabled us to transform a discrete form of the convection-diffusion equation
+<p>Overall, the Finite Element Method enabled us to transform a discrete form of the reaction-diffusion equation
 on a given grid into a linear equation system. In the following, we will investigate how such a linear equation system can be solved iteratively.</p>
 </div>
 <div class="section" id="iterative-methods">
@@ -428,7 +428,7 @@ Hence we use the formula</p>
 Nevertheless, it needs more iterations to converge than Gauss-Seidel and one needs to choose a good value for <span class="math notranslate nohighlight">\(\omega\)</span> before computation.
 Although the Gauss-Seidel methods converge in less iterations, they need longer for the computation, since the for loops need to be executed sequentially.</p>
 <p>In the next few sections, we will show how <span class="math notranslate nohighlight">\(\omega\)</span>-Jacobi and Gauss-Seidel can be used in the multigrid method,
-resulting in a fast solver for the linear equation system derived from a discrete weak form of the convection-diffusion equation.</p>
+resulting in a fast solver for the linear equation system derived from a discrete weak form of the reaction-diffusion equation.</p>
 </div>
 <div class="section" id="grid-setup">
 <h2>Grid Setup<a class="headerlink" href="#grid-setup" title="Permalink to this headline">¶</a></h2>
