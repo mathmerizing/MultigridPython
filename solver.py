@@ -67,3 +67,36 @@ class BackwardGaussSeidel(Solver):
                 return solution, iter + 1
 
         return solution, maxIter
+
+
+class  PCG(Solver):
+    def __call__(self, systemMatrix, rightHandSide, startVector, maxIter, epsilon, preConditioner = None):
+
+        if preConditioner == None:
+            self.x = startVector
+            self.r = rightHandSide - systemMatrix*self.x
+            self.d = self.r
+
+            for iter in range(maxIter):
+                self.z = systemMatrix*self.d
+
+                self.alpha = self.r.dot(self.r)/self.d.dot(self.z)
+                self.x = self.x + self.alpha*self.d
+
+                self.beta = 1/self.r.dot(self.r)
+
+                self.r = self.r - self.alpha*self.z
+
+                if np.linalg.norm(self.r) < epsilon:
+                    return self.x, iter + 1
+
+                self.beta = self.beta * self.r.dot(self.r)
+
+                self.d = self.r + self.beta * self.d
+
+            return self.x, maxIter 
+
+        else:
+            pass
+
+     
