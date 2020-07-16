@@ -202,3 +202,18 @@ def applyBoundaryCondition(grid,matrix = None,vector = None,homogenize = False):
                         matrix[dof.ind, dof.ind] = 1.0
             if edge.boundaryConstraint.type == "Neumann":
                 pass
+
+
+def getDirichletVector(grid):
+    """
+    Return a vector with components 1.0 if not a Dirchlet boundary DoF, else 0.0
+    """
+    dirichletVector = np.ones(len(grid.dofs), dtype=np.float32)
+
+    for edge in grid.edges:
+        if edge.boundaryConstraint is not None:
+            if edge.boundaryConstraint.type == "Dirichlet":
+                for dof in edge.dofs:
+                    dirichletVector[dof.ind] = 0.0
+
+    return dirichletVector

@@ -1,6 +1,6 @@
 from assembly import getLocalMatrices, assembleSystem , applyBoundaryCondition
 from grid import homeworkGrid, unitSquare
-from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel
+from solver import Jacobi, ForwardGaussSeidel, BackwardGaussSeidel, PCG
 
 import sys
 import logging
@@ -15,6 +15,14 @@ parameters = {
     "SMOOTHING_STEPS": 2,
     "SMOOTHER": "Jacobi",
     "OMEGA": 0.8
+}
+
+parametersBPX = {
+    "LEVELS": 5,
+    "SHOW_GRIDS": False,
+    "DEGREE": 1,
+    "MAX_ITER": 100,
+    "EPSILON": 1e-8
 }
 
 def getParam(userInput, default):
@@ -66,6 +74,41 @@ def inputParameters():
         print("=================")
         for key in parameters:
             print(f"{key}{' '*(20-len(key))}= {parameters[key]}")
+        print("")
+
+def inputParametersBPX():
+    print("==================")
+    print("* DEFAULT VALUES *")
+    print("==================")
+
+    for key in parametersBPX:
+        print(f"{key}{' '*(20-len(key))}= {parametersBPX[key]}")
+    print("")
+
+    change = input("Would you like to change some values? (Y/N): ")
+    if change in ["Y","y","yes", "YES", "Yes", "ja", "Ja", "JA"]:
+        # manually change all parameters
+        lvls = parametersBPX["LEVELS"]
+        parametersBPX["LEVELS"] = int(getParam(input(f"Number of MG levels (default: {lvls}) = "),lvls))
+
+        show = parametersBPX["SHOW_GRIDS"]
+        parametersBPX["SHOW_GRIDS"] = bool(getParam(input(f"Plot grids (default: {show}) = "),show))
+
+        deg = parametersBPX["DEGREE"]
+        parametersBPX["DEGREE"] = int(getParam(input(f"Degree of FE (default: {deg}) = "),deg))
+
+        it = parametersBPX["MAX_ITER"]
+        parametersBPX["MAX_ITER"] = int(getParam(input(f"Maximum number of MG iterations (default: {it}) = "),it))
+
+        eps = parametersBPX["EPSILON"]
+        parametersBPX["EPSILON"] = float(getParam(input(f"Tolerance epsilon (default: {eps}) = "),eps))
+
+        print("")
+        print("=================")
+        print("* CUSTOM VALUES *")
+        print("=================")
+        for key in parametersBPX:
+            print(f"{key}{' '*(20-len(key))}= {parametersBPX[key]}")
         print("")
 
 def run():
@@ -125,6 +168,38 @@ def runDemo():
             preSmoothSteps = parameters["SMOOTHING_STEPS"],
             postSmoothSteps = parameters["SMOOTHING_STEPS"]
         )
+
+        logging.info(f"Total time:     {timeToStr(millis()-startTime)}")
+        logging.info("")
+
+def runDemoBPX():
+    from schwarz import BPX, millis
+    coarseGrid = homeworkGrid()
+
+    bpx = BPX(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
+
+    for numLvl in range(2, parametersBPX["LEVELS"] + 1):
+        startTime = millis()
+
+        logging.info( "+-----------------------------------------+")
+        logging.info(f"+    MULTIGRID (LEVELS = {lvlToStr(numLvl)})              +")
+        logging.info( "+-----------------------------------------+")
+
+        bpx.addLevel(showGrids = parameters["SHOW_GRIDS"])
+
+        # BPX-PCG
+        solver = PCG()
+        solution, iter = solver(
+            systemMatrix    = bpx.systemMatrix,
+            rightHandSide   = bpx.systemRHS,
+            startVector     = bpx.systemRHS * 0.0,
+            maxIter         = parametersBPX["MAX_ITER"],
+            epsilon         = parametersBPX["EPSILON"],
+            preconditioner  = bpx
+        )
+        logging.info(f"BPX-PCG iterations:   {iter}")
+
+        saveVtk(solution, bpx.grids[-1])
 
         logging.info(f"Total time:     {timeToStr(millis()-startTime)}")
         logging.info("")

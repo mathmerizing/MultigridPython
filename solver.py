@@ -70,33 +70,25 @@ class BackwardGaussSeidel(Solver):
 
 
 class  PCG(Solver):
-    def __call__(self, systemMatrix, rightHandSide, startVector, maxIter, epsilon, preConditioner = None):
+    def __call__(self, systemMatrix, rightHandSide, startVector, maxIter, epsilon, preconditioner = lambda x: x):
+        x = startVector
+        r = rightHandSide - systemMatrix.dot(x) # residual = b - A*x
+        d = preconditioner(r) # search direction = C^{-1}*r
+        r_tilde = d.copy() # C^{-1}*r
 
-        if preConditioner == None:
-            self.x = startVector
-            self.r = rightHandSide - systemMatrix*self.x
-            self.d = self.r
+        for iter in range(maxIter):
+            z = systemMatrix.dot(d) # z = A*d
+            alpha = r_tilde.dot(r)/d.dot(z) # alpha = (\tilde{r}^T * r) / (d^T * z)
+            x += alpha * d
+            beta = 1 / r_tilde.dot(r)
+            r -= alpha * z
+            r_tilde = preconditioner(r) # \tilde{r} = C^{-1}*r
 
-            for iter in range(maxIter):
-                self.z = systemMatrix*self.d
+            # STOPPING CRITERION
+            if np.linalg.norm(r) < epsilon:
+                return x, iter + 1
 
-                self.alpha = self.r.dot(self.r)/self.d.dot(self.z)
-                self.x = self.x + self.alpha*self.d
+            beta = beta * r_tilde.dot(r) # beta = (\tilde{r}_new^T * r_new) / (\tilde{r}_old^T * r_old)
+            d = r_tilde + beta * d
 
-                self.beta = 1/self.r.dot(self.r)
-
-                self.r = self.r - self.alpha*self.z
-
-                if np.linalg.norm(self.r) < epsilon:
-                    return self.x, iter + 1
-
-                self.beta = self.beta * self.r.dot(self.r)
-
-                self.d = self.r + self.beta * self.d
-
-            return self.x, maxIter 
-
-        else:
-            pass
-
-     
+        return x, maxIter
