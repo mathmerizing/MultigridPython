@@ -192,7 +192,7 @@ def runDemoBPX():
         solution, iter = solver(
             systemMatrix    = bpx.systemMatrix,
             rightHandSide   = bpx.systemRHS,
-            startVector     = bpx.systemRHS * 0.0,
+            startVector     = np.zeros(bpx.systemRHS.shape[0]),
             maxIter         = parametersBPX["MAX_ITER"],
             epsilon         = parametersBPX["EPSILON"],
             preconditioner  = bpx
@@ -200,6 +200,38 @@ def runDemoBPX():
         logging.info(f"BPX-PCG iterations:   {iter}")
 
         saveVtk(solution, bpx.grids[-1])
+
+        logging.info(f"Total time:     {timeToStr(millis()-startTime)}")
+        logging.info("")
+
+def runDemoHB():
+    from schwarz import HB, millis
+    coarseGrid = homeworkGrid()
+
+    hb = HB(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
+
+    for numLvl in range(2, parametersBPX["LEVELS"] + 1):
+        startTime = millis()
+
+        logging.info( "+-----------------------------------------+")
+        logging.info(f"+    MULTIGRID (LEVELS = {lvlToStr(numLvl)})              +")
+        logging.info( "+-----------------------------------------+")
+
+        hb.addLevel(showGrids = parameters["SHOW_GRIDS"])
+
+        # HB-PCG
+        solver = PCG()
+        solution, iter = solver(
+            systemMatrix    = hb.systemMatrix,
+            rightHandSide   = hb.systemRHS,
+            startVector     = np.zeros(hb.systemRHS.shape[0]),
+            maxIter         = parametersBPX["MAX_ITER"],
+            epsilon         = parametersBPX["EPSILON"],
+            preconditioner  = hb
+        )
+        logging.info(f"HB-PCG iterations:   {iter}")
+
+        saveVtk(solution, hb.grids[-1])
 
         logging.info(f"Total time:     {timeToStr(millis()-startTime)}")
         logging.info("")

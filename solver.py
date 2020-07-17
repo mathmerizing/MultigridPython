@@ -1,6 +1,7 @@
 from scipy.sparse import diags
 import numpy as np
 from abc import ABC, abstractmethod
+import logging
 
 class Solver(ABC):
     """
@@ -85,7 +86,9 @@ class  PCG(Solver):
             r_tilde = preconditioner(r) # \tilde{r} = C^{-1}*r
 
             # STOPPING CRITERION
-            if np.linalg.norm(r) < epsilon:
+            residualNorm = np.linalg.norm(r)
+            logging.debug(f"{iter}.th residual: {residualNorm}")
+            if residualNorm < epsilon:
                 return x, iter + 1
 
             beta = beta * r_tilde.dot(r) # beta = (\tilde{r}_new^T * r_new) / (\tilde{r}_old^T * r_old)
