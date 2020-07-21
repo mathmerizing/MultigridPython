@@ -481,7 +481,7 @@ def unitSquare(degree = 1):
                             )
                         )
 
-    my_material = lambda val : Material({"a": 1., "c": 1., "f":  val})
+    my_material = lambda val : Material({"a": 1., "c": 0., "f":  val})
 
     triangles[0].material = my_material(1.)
     triangles[1].material = my_material(0.)
