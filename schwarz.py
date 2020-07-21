@@ -241,6 +241,7 @@ class HB():
 
     @timeit
     def __call__(self, vector):
+        """
         vectors = [vector]
 
         newNodes = []
@@ -263,17 +264,17 @@ class HB():
             vectors.append(interpolationMatrix.T.dot(vectors[-1]))
         vectors = vectors[::-1]
 
-        """
+        
         # diagonal scaling
         for i, vector in enumerate(vectors):
             dim = vector.shape[0]
             vectors[i] = self.D_inverse[:dim,:dim].multiply(newNodes[i][:dim]).multiply(self.dirichletVectors[i]).dot(vector)
-
+        
         # interpolation
         for i in range(1, len(vectors)):
             vectors[i] += self.prolongationMatrices[i-1].dot(vectors[i-1])
 
-        return vectors[-1]
+        #return vectors[-1]
         """
 
 
@@ -283,15 +284,18 @@ class HB():
         for i, interpolationMatrix in enumerate(self.prolongationMatrices[::-1]):
             n, m = interpolationMatrix.shape
             w[:m] = interpolationMatrix.T.dot(w[:n])
-            applyBoundaryCondition(grid = self.grids[-1], vector = w, homogenize = True)
+            
 
-        #tmp = np.concatenate(vectors)
-        print(w[:8])
-        print(vectors[0])
-        print(w)
-        print(vectors[1])
-        #print(w-tmp)
-        input()
+        # diagonal scaling
+        w = self.D_inverse.multiply(self.dirichletVectors[-1]).dot(w)
+        
+        # interpolation
+        for interpolationMatrix in self.prolongationMatrices:
+            n, m = interpolationMatrix.shape
+            w[m:n] += interpolationMatrix.dot(w[:m])[m:n]
+            
+        
+        return w
 
         """
         # diagonal scaling
@@ -308,7 +312,7 @@ class HB():
 
         # the following code is only for testing
         # the iteration numbers match with the method above
-
+        """
         newNodes = []
         grid = self.grids[-1]
         numDofs = len(grid.dofs)
@@ -338,3 +342,4 @@ class HB():
             out += interpolationMatrix.dot(self.D_inverse[:dim, :dim].multiply(newNode[:dim]).multiply(self.dirichletVectors[-1][:dim])).dot(interpolationMatrix.T).dot(vector)
 
         return out
+        """
