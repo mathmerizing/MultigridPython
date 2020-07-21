@@ -459,7 +459,7 @@ def unitSquare(degree = 1):
     #diagonal edge
     edges.append(Edge(nodes[0], nodes[3]))
     #boundary condition
-    dirichletBoundaryConditions = BoundaryCondition("Dirichlet")
+    dirichletBoundaryConditions = BoundaryCondition("Dirichlet",homogeneous = False, function = lambda x,y: 1.0)
 
     # add BoundaryCondition to edge
     edges[3].boundaryConstraint = dirichletBoundaryConditions

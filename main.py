@@ -174,7 +174,7 @@ def runDemo():
 
 def runDemoBPX():
     from schwarz import BPX, millis
-    coarseGrid = homeworkGrid()
+    coarseGrid = unitSquare() #homeworkGrid()
 
     bpx = BPX(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
 
@@ -206,7 +206,7 @@ def runDemoBPX():
 
 def runDemoHB():
     from schwarz import HB, millis
-    coarseGrid = homeworkGrid()
+    coarseGrid = unitSquare() #homeworkGrid()
 
     hb = HB(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
 
