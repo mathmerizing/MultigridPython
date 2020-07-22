@@ -198,6 +198,7 @@ def runDemoBPX():
             preconditioner  = bpx
         )
         logging.info(f"BPX-PCG iterations:   {iter}")
+        logging.info(f"BPX condition number: {bpx.conditionNumber()}")
 
         saveVtk(solution, bpx.grids[-1])
 
@@ -230,6 +231,7 @@ def runDemoHB():
             preconditioner  = hb
         )
         logging.info(f"HB-PCG iterations:   {iter}")
+        logging.info(f"HB condition number: {hb.conditionNumber()}")
 
         saveVtk(solution, hb.grids[-1])
 

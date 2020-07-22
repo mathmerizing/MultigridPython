@@ -133,6 +133,24 @@ class BPX():
 
         return vectors[-1]
 
+    @timeit
+    def conditionNumber(self):
+        dim = self.systemMatrix.shape[0]
+        identityMatrix = np.eye(dim)
+        preconditionerMatrix = np.zeros((dim,dim), dtype = np.float64)
+
+        for  i in range(dim):
+            col = identityMatrix[:,i].copy()
+            solution = self.__call__( vector = col )
+            preconditionerMatrix[:,i] = solution.reshape(dim)
+        """
+        print(preconditionerMatrix)
+        print(np.linalg.inv(self.systemMatrix.todense()))
+        print(preconditionerMatrix.dot(np.linalg.inv(self.systemMatrix.todense())))
+        input()
+        """
+        return np.linalg.cond(preconditionerMatrix.dot(self.systemMatrix.todense()))
+
 
 class HB():
     @timeit
@@ -244,3 +262,21 @@ class HB():
             w[m:n] += interpolationMatrix.dot(w[:m])[m:n]
             #applyBoundaryCondition(grid = self.grids[-1], vector = w, homogenize = False)
         return w
+
+    @timeit
+    def conditionNumber(self):
+        dim = self.systemMatrix.shape[0]
+        identityMatrix = np.eye(dim)
+        preconditionerMatrix = np.zeros((dim,dim), dtype = np.float64)
+
+        for  i in range(dim):
+            col = identityMatrix[:,i].copy()
+            solution = self.__call__( vector = col )
+            preconditionerMatrix[:,i] = solution.reshape(dim)
+        """
+        print(preconditionerMatrix)
+        print(np.linalg.inv(self.systemMatrix.todense()))
+        print(preconditionerMatrix.dot(np.linalg.inv(self.systemMatrix.todense())))
+        input()
+        """
+        return np.linalg.cond(preconditionerMatrix.dot(self.systemMatrix.todense()))
