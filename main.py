@@ -174,7 +174,7 @@ def runDemo():
 
 def runDemoBPX():
     from schwarz import BPX, millis
-    coarseGrid = unitSquare() #homeworkGrid()
+    coarseGrid = homeworkGrid() #unitSquare() #
 
     bpx = BPX(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
 
@@ -198,7 +198,6 @@ def runDemoBPX():
             preconditioner  = bpx
         )
         logging.info(f"BPX-PCG iterations:   {iter}")
-        logging.info(f"BPX condition number: {bpx.conditionNumber()}")
 
         saveVtk(solution, bpx.grids[-1])
 
@@ -207,7 +206,7 @@ def runDemoBPX():
 
 def runDemoHB():
     from schwarz import HB, millis
-    coarseGrid = unitSquare() #homeworkGrid()
+    coarseGrid = homeworkGrid() #unitSquare() #
 
     hb = HB(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
 
@@ -231,7 +230,6 @@ def runDemoHB():
             preconditioner  = hb
         )
         logging.info(f"HB-PCG iterations:   {iter}")
-        logging.info(f"HB condition number: {hb.conditionNumber()}")
 
         saveVtk(solution, hb.grids[-1])
 
