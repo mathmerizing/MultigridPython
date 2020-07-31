@@ -172,11 +172,13 @@ def runDemo():
         logging.info(f"Total time:     {timeToStr(millis()-startTime)}")
         logging.info("")
 
-def runDemoBPX():
+def runDemoBPX(initialRefinements = 0):
     from schwarz import BPX, millis
     coarseGrid = homeworkGrid() #unitSquare() #
+    for i in range(initialRefinements):
+        coarseGrid = coarseGrid.refine()
 
-    bpx = BPX(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
+    bpx = BPX(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"], coarseGridSolve = (initialRefinements > 0))
 
     for numLvl in range(2, parametersBPX["LEVELS"] + 1):
         startTime = millis()
@@ -204,11 +206,13 @@ def runDemoBPX():
         logging.info(f"Total time:     {timeToStr(millis()-startTime)}")
         logging.info("")
 
-def runDemoHB():
+def runDemoHB(initialRefinements = 0):
     from schwarz import HB, millis
     coarseGrid = homeworkGrid() #unitSquare() #
+    for i in range(initialRefinements):
+        coarseGrid = coarseGrid.refine()
 
-    hb = HB(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"])
+    hb = HB(coarseGrid, numberLevels = 1, showGrids = parameters["SHOW_GRIDS"], coarseGridSolve = (initialRefinements > 0))
 
     for numLvl in range(2, parametersBPX["LEVELS"] + 1):
         startTime = millis()
