@@ -236,10 +236,7 @@ class HB():
 
     @timeit
     def __call__(self, vector):
-        # BOUNDARY CONDITIONS ?!
-
         w = vector.copy()
-        #applyBoundaryCondition(grid = self.grids[-1], vector = w, homogenize = False)
 
         # restriction
         for i, interpolationMatrix in enumerate(self.prolongationMatrices[::-1]):
