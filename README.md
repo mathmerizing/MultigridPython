@@ -1,5 +1,3 @@
 # MultigridPython
 
-- [x] Create basic FEM program
-- [x] Setup demo problem
-- [x] Solve problem with Jacobi and Forward/Backward Gauss Seidel
+For more information on this project please visit https://julianroth.org/documentation/multigrid/
